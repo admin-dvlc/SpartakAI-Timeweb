@@ -11,21 +11,13 @@
       height: 100%;
       width: 100%;
       overflow: hidden;
-      background: #000; /* фон для Teams dark */
+      background: #000;
     }
 
-    /* Контейнер на весь экран */
-    #tw-root {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-    }
-
-    /* Делает окно виджета полноэкранным */
-    .timeweb-agent-chat {
+    /* Растягиваем окно виджета на всю вкладку */
+    .agent-chat-widget {
       position: fixed !important;
-      inset: 0 !important;
+      inset: 0 !important;          /* top:0; right:0; bottom:0; left:0 */
       width: 100% !important;
       height: 100% !important;
       max-width: 100% !important;
@@ -33,39 +25,49 @@
       border-radius: 0 !important;
       box-shadow: none !important;
     }
+
+    /* Убираем плавающую кнопку, чтобы не мешалась */
+    .agent-chat-widget .floating-button-container,
+    .agent-chat-widget .floating-button {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
-  <div id="tw-root"></div>
-
   <!-- embed-скрипт агента -->
   <script async src="https://timeweb.cloud/api/v1/cloud-ai/agents/58ca2bd7-4157-4445-ab50-6b92360563eb/embed.js?collapsed=true"></script>
 
   <script>
-    // Ждём появления кнопки виджета и открываем чат программно
-    function openTimewebChat() {
-      const toggle =
-        document.querySelector('.timeweb-agent-chat button') ||
-        document.querySelector('[data-tw-toggle]') ||
-        document.querySelector('.tw-floating-toggle');
+    // Ждём появления контейнера и принудительно открываем чат
+    function openChatFullscreen() {
+      const widget = document.querySelector('.agent-chat-widget');
+      if (!widget) return false;
 
-      if (toggle) {
-        toggle.click(); // открываем свернутый виджет
-        return true;
-      }
-      return false;
+      // снимаем флаг is-closed и ставим is-open / isFullscreen
+      widget.classList.remove('is-closed');
+      widget.classList.add('is-open');
+      widget.dataset.widgetState = JSON.stringify({
+        open: true,
+        isFullscreen: true,
+        isMenuOpen: false,
+        isConnected: true,
+        isDragging: false,
+        isResizing: false,
+        hasCustomPosition: true
+      });
+
+      return true;
     }
 
-    // Периодически пытаемся найти и открыть виджет после загрузки страницы
     let attempts = 0;
-    const maxAttempts = 20;
+    const maxAttempts = 30;
 
     const timer = setInterval(() => {
       attempts++;
-      if (openTimewebChat() || attempts >= maxAttempts) {
+      if (openChatFullscreen() || attempts >= maxAttempts) {
         clearInterval(timer);
       }
-    }, 500); // каждые 500 мс, пока не откроется
+    }, 500);
   </script>
 </body>
 </html>
