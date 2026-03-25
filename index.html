@@ -157,11 +157,17 @@
             }
           },
           failureCallback: (error) => {
-            console.error("getAuthToken error:", error);
+            let details = "";
+            try {
+              details = typeof error === "string" ? error : JSON.stringify(error);
+            } catch {
+              details = String(error);
+            }
+
             document.body.innerHTML =
-              "<div class='error'><h2>getAuthToken error</h2><p>" +
-              (error || "unknown error") +
-              "</p></div>";
+              "<div class='error'><h2>getAuthToken error</h2><pre style='white-space:pre-wrap;color:#4ea3ff'>" +
+              details +
+              "</pre></div>";
           }
         });
       } catch (e) {
