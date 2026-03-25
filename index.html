@@ -123,7 +123,6 @@
     }
 
     async function initTeamsSso() {
-      // если нет SDK или мы явно не в iframe – считаем, что это не Teams
       const inIframe = window.self !== window.top;
       if (!window.microsoftTeams || !microsoftTeams.app || !inIframe) {
         setStatus("");
@@ -158,10 +157,11 @@
             }
           },
           failureCallback: (error) => {
-            console.warn("getAuthToken failed:", error);
             console.error("getAuthToken error:", error);
             document.body.innerHTML =
-              "<h3 style='color:white;font-family:sans-serif'>Не удалось пройти аутентификацию в Teams</h3>";
+              "<div class='error'><h2>getAuthToken error</h2><p>" +
+              (error || "unknown error") +
+              "</p></div>";
           }
         });
       } catch (e) {
@@ -170,13 +170,10 @@
       }
     }
 
-    // Точка входа
     if (location.pathname.startsWith("/teams")) {
-      // /teams — только из клиента Teams, без обхода
       setStatus("Инициализация Teams SSO...");
       initTeamsSso();
     } else {
-      // Остальное — через AAD SWA, виджет грузим сразу
       setStatus("AAD auth через SWA, загружаем виджет...");
       loadTimewebWidget();
     }
