@@ -15,7 +15,6 @@
       background: #000;
     }
 
-    /* Растягиваем окно виджета на всю вкладку */
     .agent-chat-widget {
       position: fixed !important;
       inset: 0 !important;
@@ -27,13 +26,11 @@
       box-shadow: none !important;
     }
 
-    /* Убираем плавающую кнопку, чтобы не мешалась */
     .agent-chat-widget .floating-button-container,
     .agent-chat-widget .floating-button {
       display: none !important;
     }
 
-    /* Контейнер для статуса/отладочных сообщений */
     #status {
       position: fixed;
       top: 10px;
@@ -43,9 +40,14 @@
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       font-size: 13px;
     }
+
+    .error {
+      color: #fff;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 40px;
+    }
   </style>
 
-  <!-- Teams JS SDK v2 (рабочий URL с CDN Microsoft) -->
   <script
     src="https://res.cdn.office.net/teams-js/2.30.0/js/MicrosoftTeams.min.js"
     integrity="sha384-8I0Bv4bWDPSX5ZYhJcChnvrBNoieX3zASTxmZ9URwnjEVx70hsrN0ZUy/C46u8dw"
@@ -63,13 +65,12 @@
       if (el) el.textContent = text || "";
     }
 
-    // Разворачиваем виджет на весь экран
     function openChatFullscreen() {
-      const widget = document.querySelector('.agent-chat-widget');
+      const widget = document.querySelector(".agent-chat-widget");
       if (!widget) return false;
 
-      widget.classList.remove('is-closed');
-      widget.classList.add('is-open');
+      widget.classList.remove("is-closed");
+      widget.classList.add("is-open");
       widget.dataset.widgetState = JSON.stringify({
         open: true,
         isFullscreen: true,
@@ -95,11 +96,8 @@
       }, 500);
     }
 
-    // Подключаем embed Timeweb только после успешного доступа
     function loadTimewebWidget() {
-      if (document.getElementById("timeweb-embed-script")) {
-        return; // уже загружен
-      }
+      if (document.getElementById("timeweb-embed-script")) return;
 
       const s = document.createElement("script");
       s.id = "timeweb-embed-script";
@@ -115,30 +113,31 @@
       document.body.appendChild(s);
     }
 
-    // SSO во вкладке Teams (маршрут /teams)
+    function showTeamsOnlyError() {
+      document.body.innerHTML = `
+        <div class="error">
+          <h2>Доступ только из Microsoft Teams</h2>
+          <p>Этот путь предназначен для вкладки Teams и не должен открываться напрямую.</p>
+          <p><a href="/" style="color:#4ea3ff">Перейти на главную страницу</a></p>
+        </div>`;
+    }
+
     async function initTeamsSso() {
-      // если SDK не подцепился вообще
-      if (!window.microsoftTeams || !microsoftTeams.app) {
-        setStatus("Открыто вне Teams (нет SDK), загружаем виджет");
-        loadTimewebWidget();
+      // если нет SDK или мы явно не в iframe – считаем, что это не Teams
+      const inIframe = window.self !== window.top;
+      if (!window.microsoftTeams || !microsoftTeams.app || !inIframe) {
+        setStatus("");
+        showTeamsOnlyError();
         return;
       }
 
       try {
         await microsoftTeams.app.initialize();
 
-        // необязательно, но полезно для отладки
-        try {
-          const context = await microsoftTeams.app.getContext();
-          console.log("Teams context:", context);
-        } catch (ctxErr) {
-          console.warn("Cannot get Teams context:", ctxErr);
-        }
-
         microsoftTeams.authentication.getAuthToken({
           successCallback: (token) => {
             try {
-              const payload = JSON.parse(atob(token.split('.')[1]));
+              const payload = JSON.parse(atob(token.split(".")[1]));
               const tid = payload.tid;
               const upn = payload.preferred_username || payload.upn;
 
@@ -154,29 +153,29 @@
               loadTimewebWidget();
             } catch (e) {
               console.error("Failed to parse SSO token:", e);
-              setStatus("Ошибка обработки SSO токена");
-              loadTimewebWidget(); // чтобы совсем не оставлять пустой экран
+              document.body.innerHTML =
+                "<h3 style='color:white;font-family:sans-serif'>Ошибка обработки SSO токена</h3>";
             }
           },
           failureCallback: (error) => {
-            console.error("Failed to get SSO token:", error);
-            setStatus("Не удалось пройти аутентификацию в Teams");
+            console.warn("getAuthToken failed:", error);
+            document.body.innerHTML =
+              "<h3 style='color:white;font-family:sans-serif'>Не удалось пройти аутентификацию в Teams</h3>";
           }
         });
       } catch (e) {
-        console.error("Teams SDK init failed:", e);
-        // Если упали при инициализации (например, /teams открыт напрямую в браузере),
-        // считаем, что это не окно Teams, и просто загружаем виджет
-        setStatus("Не похоже на окно Teams, загружаем виджет без SSO");
-        loadTimewebWidget();
+        console.warn("Teams SDK init failed (скорее всего, не Teams):", e);
+        showTeamsOnlyError();
       }
     }
 
     // Точка входа
     if (location.pathname.startsWith("/teams")) {
+      // /teams — только из клиента Teams, без обхода
       setStatus("Инициализация Teams SSO...");
       initTeamsSso();
     } else {
+      // Остальное — через AAD SWA, виджет грузим сразу
       setStatus("AAD auth через SWA, загружаем виджет...");
       loadTimewebWidget();
     }
