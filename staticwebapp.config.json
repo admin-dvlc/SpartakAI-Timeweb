@@ -1,8 +1,16 @@
 {
   "routes": [
     {
-      "route": "/*",
+      "route": "/privacy.html",
       "allowedRoles": [ "anonymous" ]
+    },
+    {
+      "route": "/terms.html",
+      "allowedRoles": [ "anonymous" ]
+    },
+    {
+      "route": "/*",
+      "allowedRoles": [ "authenticated" ]
     }
   ]
 }
