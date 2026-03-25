@@ -159,6 +159,7 @@
           },
           failureCallback: (error) => {
             console.warn("getAuthToken failed:", error);
+            console.error("getAuthToken error:", error);
             document.body.innerHTML =
               "<h3 style='color:white;font-family:sans-serif'>Не удалось пройти аутентификацию в Teams</h3>";
           }
