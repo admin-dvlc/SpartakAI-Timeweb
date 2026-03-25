@@ -17,7 +17,7 @@
     /* Растягиваем окно виджета на всю вкладку */
     .agent-chat-widget {
       position: fixed !important;
-      inset: 0 !important;          /* top:0; right:0; bottom:0; left:0 */
+      inset: 0 !important;
       width: 100% !important;
       height: 100% !important;
       max-width: 100% !important;
@@ -31,19 +31,40 @@
     .agent-chat-widget .floating-button {
       display: none !important;
     }
+
+    /* Простейший контейнер для статуса/ошибок */
+    #status {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 9999;
+      color: #fff;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 13px;
+    }
   </style>
+
+  <!-- Teams JS SDK для SSO во вкладке -->
+  <script src="https://res.cdn.office.net/teams-js/v2.11.0/js/MicrosoftTeams.min.js"></script>
 </head>
 <body>
-  <!-- embed-скрипт агента -->
-  <script async src="https://timeweb.cloud/api/v1/cloud-ai/agents/58ca2bd7-4157-4445-ab50-6b92360563eb/embed.js?collapsed=true"></script>
+  <div id="status"></div>
+
+  <!-- embed-скрипт агента будет добавляться динамически после проверки доступа -->
 
   <script>
-    // Ждём появления контейнера и принудительно открываем чат
+    const EXPECTED_TENANT_ID = "eddab487-208e-4c81-b05f-b92089363722";
+
+    function setStatus(text) {
+      const el = document.getElementById("status");
+      if (el) el.textContent = text;
+    }
+
+    // Твой оригинальный код для разворота виджета на весь экран
     function openChatFullscreen() {
       const widget = document.querySelector('.agent-chat-widget');
       if (!widget) return false;
 
-      // снимаем флаг is-closed и ставим is-open / isFullscreen
       widget.classList.remove('is-closed');
       widget.classList.add('is-open');
       widget.dataset.widgetState = JSON.stringify({
@@ -59,15 +80,92 @@
       return true;
     }
 
-    let attempts = 0;
-    const maxAttempts = 30;
+    function initFullscreenPoll() {
+      let attempts = 0;
+      const maxAttempts = 30;
 
-    const timer = setInterval(() => {
-      attempts++;
-      if (openChatFullscreen() || attempts >= maxAttempts) {
-        clearInterval(timer);
+      const timer = setInterval(() => {
+        attempts++;
+        if (openChatFullscreen() || attempts >= maxAttempts) {
+          clearInterval(timer);
+        }
+      }, 500);
+    }
+
+    // Функция, которая реально подключает embed Timeweb
+    function loadTimewebWidget() {
+      if (document.getElementById("timeweb-embed-script")) {
+        return; // уже загружен
       }
-    }, 500);
+
+      const s = document.createElement("script");
+      s.id = "timeweb-embed-script";
+      s.async = true;
+      s.src = "https://timeweb.cloud/api/v1/cloud-ai/agents/58ca2bd7-4157-4445-ab50-6b92360563eb/embed.js?collapsed=true";
+      s.onload = () => {
+        setStatus(""); // очищаем статус
+        initFullscreenPoll();
+      };
+      s.onerror = () => {
+        setStatus("Ошибка загрузки Timeweb-виджета");
+      };
+      document.body.appendChild(s);
+    }
+
+    // SSO для Teams – вызываем только на маршруте /teams
+    async function initTeamsSso() {
+      if (!window.microsoftTeams) {
+        // На всякий случай – если вдруг /teams откроют не в Teams
+        setStatus("Открыто вне Teams, SSO недоступен");
+        loadTimewebWidget(); // всё равно грузим виджет
+        return;
+      }
+
+      try {
+        await microsoftTeams.app.initialize();
+
+        microsoftTeams.authentication.getAuthToken({
+          successCallback: (token) => {
+            try {
+              const payload = JSON.parse(atob(token.split('.')[1]));
+              const tid = payload.tid;
+              const upn = payload.preferred_username || payload.upn;
+
+              console.log("Teams SSO user:", upn, "tenant:", tid);
+
+              if (tid !== EXPECTED_TENANT_ID) {
+                document.body.innerHTML = "<h3 style='color:white;font-family:sans-serif'>Access denied: wrong tenant</h3>";
+                return;
+              }
+
+              setStatus("Teams SSO OK: " + upn);
+              loadTimewebWidget();
+            } catch (e) {
+              console.error("Failed to parse SSO token:", e);
+              setStatus("Ошибка обработки SSO токена");
+            }
+          },
+          failureCallback: (error) => {
+            console.error("Failed to get SSO token:", error);
+            setStatus("Не удалось пройти аутентификацию в Teams");
+          }
+        });
+      } catch (e) {
+        console.error("Teams SDK init failed:", e);
+        setStatus("Ошибка инициализации Teams SDK");
+      }
+    }
+
+    // Точка входа
+    if (location.pathname.startsWith("/teams")) {
+      // Вкладка Teams: проверяем SSO и tenant, потом грузим виджет
+      setStatus("Инициализация Teams SSO...");
+      initTeamsSso();
+    } else {
+      // Прямой заход по URL: SWA уже проверил AAD и пустил только свой тенант
+      setStatus("AAD auth через SWA, загружаем виджет...");
+      loadTimewebWidget();
+    }
   </script>
 </body>
 </html>
