@@ -19,6 +19,7 @@ jobs:
         with:
           submodules: true
           lfs: false
+
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -28,8 +29,9 @@ jobs:
           action: "upload"
           app_location: "/"
           api_location: ""
-          output_location: ""        # ← было "/" → меняем на "" (нет build-папки)
-          skip_app_build: true       # ← ДОБАВИТЬ! отключает Oryx, просто берёт HTML как есть
+          output_location: ""
+          skip_app_build: true
+          production_branch: "main"
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
