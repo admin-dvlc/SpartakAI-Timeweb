@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Timeweb AI Agent</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <style>
     html, body {
       margin: 0;
@@ -32,7 +33,7 @@
       display: none !important;
     }
 
-    /* Простейший контейнер для статуса/ошибок */
+    /* Контейнер для статуса/отладочных сообщений */
     #status {
       position: fixed;
       top: 10px;
@@ -44,23 +45,25 @@
     }
   </style>
 
-  <!-- Teams JS SDK для SSO во вкладке -->
-  <script src="https://res.cdn.office.net/teams-js/v2/js/MicrosoftTeams.min.js"></script>
+  <!-- Teams JS SDK v2 (рабочий URL с CDN Microsoft) -->
+  <script
+    src="https://res.cdn.office.net/teams-js/2.30.0/js/MicrosoftTeams.min.js"
+    integrity="sha384-8I0Bv4bWDPSX5ZYhJcChnvrBNoieX3zASTxmZ9URwnjEVx70hsrN0ZUy/C46u8dw"
+    crossorigin="anonymous">
+  </script>
 </head>
 <body>
   <div id="status"></div>
-
-  <!-- embed-скрипт агента будет добавляться динамически после проверки доступа -->
 
   <script>
     const EXPECTED_TENANT_ID = "eddab487-208e-4c81-b05f-b92089363722";
 
     function setStatus(text) {
       const el = document.getElementById("status");
-      if (el) el.textContent = text;
+      if (el) el.textContent = text || "";
     }
 
-    // Твой оригинальный код для разворота виджета на весь экран
+    // Твой код: разворачиваем виджет на весь экран
     function openChatFullscreen() {
       const widget = document.querySelector('.agent-chat-widget');
       if (!widget) return false;
@@ -92,7 +95,7 @@
       }, 500);
     }
 
-    // Функция, которая реально подключает embed Timeweb
+    // Подключаем embed Timeweb только после успешного доступа
     function loadTimewebWidget() {
       if (document.getElementById("timeweb-embed-script")) {
         return; // уже загружен
@@ -103,7 +106,7 @@
       s.async = true;
       s.src = "https://timeweb.cloud/api/v1/cloud-ai/agents/58ca2bd7-4157-4445-ab50-6b92360563eb/embed.js?collapsed=true";
       s.onload = () => {
-        setStatus(""); // очищаем статус
+        setStatus("");
         initFullscreenPoll();
       };
       s.onerror = () => {
@@ -112,12 +115,12 @@
       document.body.appendChild(s);
     }
 
-    // SSO для Teams – вызываем только на маршруте /teams
+    // SSO во вкладке Teams (маршрут /teams)
     async function initTeamsSso() {
       if (!window.microsoftTeams) {
-        // На всякий случай – если вдруг /teams откроют не в Teams
+        // /teams открыли не в Teams – считаем это прямым доступом
         setStatus("Открыто вне Teams, SSO недоступен");
-        loadTimewebWidget(); // всё равно грузим виджет
+        loadTimewebWidget();
         return;
       }
 
@@ -134,7 +137,8 @@
               console.log("Teams SSO user:", upn, "tenant:", tid);
 
               if (tid !== EXPECTED_TENANT_ID) {
-                document.body.innerHTML = "<h3 style='color:white;font-family:sans-serif'>Access denied: wrong tenant</h3>";
+                document.body.innerHTML =
+                  "<h3 style='color:white;font-family:sans-serif'>Access denied: wrong tenant</h3>";
                 return;
               }
 
@@ -158,11 +162,11 @@
 
     // Точка входа
     if (location.pathname.startsWith("/teams")) {
-      // Вкладка Teams: проверяем SSO и tenant, потом грузим виджет
+      // Вкладка Teams: SSO + проверка tenantId
       setStatus("Инициализация Teams SSO...");
       initTeamsSso();
     } else {
-      // Прямой заход по URL: SWA уже проверил AAD и пустил только свой тенант
+      // Прямой заход: SWA уже защитил AAD и пустил только свой тенант
       setStatus("AAD auth через SWA, загружаем виджет...");
       loadTimewebWidget();
     }
