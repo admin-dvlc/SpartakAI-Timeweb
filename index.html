@@ -11,18 +11,21 @@
       height: 100%;
       width: 100%;
       overflow: hidden;
-      background: #0b0b0b; /* тёмный фон под виджетом */
+      background: #000; /* фон для Teams dark */
     }
+
+    /* Контейнер на весь экран */
     #tw-root {
       position: fixed;
       inset: 0;
       width: 100%;
       height: 100%;
     }
-    /* Переопределяем плавающий режим Timeweb под “full screen” */
+
+    /* Делает окно виджета полноэкранным */
     .timeweb-agent-chat {
       position: fixed !important;
-      inset: 0 !important;       /* top:0; right:0; bottom:0; left:0 */
+      inset: 0 !important;
       width: 100% !important;
       height: 100% !important;
       max-width: 100% !important;
@@ -30,29 +33,39 @@
       border-radius: 0 !important;
       box-shadow: none !important;
     }
-    .timeweb-agent-chat button,
-    .timeweb-agent-chat [data-tw-toggle],
-    .timeweb-agent-chat .tw-floating-toggle {
-      display: none !important; /* скрываем плавающую кнопку */
-    }
   </style>
 </head>
 <body>
-  <!-- Корневой контейнер, чтобы виджет был над всей страницей -->
   <div id="tw-root"></div>
 
-  <!-- Чистый embed-скрипт вашего агента -->
-  <script async src="https://timeweb.cloud/api/v1/cloud-ai/agents/58ca2bd7-4157-4445-ab50-6b92360563eb/embed.js?collapsed=false"></script>
+  <!-- embed-скрипт агента -->
+  <script async src="https://timeweb.cloud/api/v1/cloud-ai/agents/58ca2bd7-4157-4445-ab50-6b92360563eb/embed.js?collapsed=true"></script>
 
   <script>
-    // Мини-проверка, что скрипт загрузился
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        if (!document.querySelector('.timeweb-agent-chat')) {
-          console.warn('Timeweb widget not found — проверьте домены в панели Timeweb.');
-        }
-      }, 3000);
-    });
+    // Ждём появления кнопки виджета и открываем чат программно
+    function openTimewebChat() {
+      const toggle =
+        document.querySelector('.timeweb-agent-chat button') ||
+        document.querySelector('[data-tw-toggle]') ||
+        document.querySelector('.tw-floating-toggle');
+
+      if (toggle) {
+        toggle.click(); // открываем свернутый виджет
+        return true;
+      }
+      return false;
+    }
+
+    // Периодически пытаемся найти и открыть виджет после загрузки страницы
+    let attempts = 0;
+    const maxAttempts = 20;
+
+    const timer = setInterval(() => {
+      attempts++;
+      if (openTimewebChat() || attempts >= maxAttempts) {
+        clearInterval(timer);
+      }
+    }, 500); // каждые 500 мс, пока не откроется
   </script>
 </body>
 </html>
