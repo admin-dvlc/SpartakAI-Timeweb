@@ -1,69 +1,55 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>🤖 Timeweb AI Agent</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>Timeweb AI Agent</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    html, body {
       margin: 0;
-      padding: 24px;
-      background: #f3f2f1;
-      color: #201f1e;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      background: #0b0b0b; /* тёмный фон под виджетом */
     }
-    .card {
-      max-width: 840px;
-      margin: 0 auto;
-      background: #ffffff;
-      border-radius: 12px;
-      padding: 24px 32px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    #tw-root {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
     }
-    h1 { margin-top: 0; color: #0078d4; }
-    #status {
-      margin-top: 16px;
-      padding: 12px 16px;
-      border-radius: 8px;
-      background: #e3f2fd;
-      color: #0b5394;
-      font-size: 14px;
+    /* Переопределяем плавающий режим Timeweb под “full screen” */
+    .timeweb-agent-chat {
+      position: fixed !important;
+      inset: 0 !important;       /* top:0; right:0; bottom:0; left:0 */
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 100% !important;
+      max-height: 100% !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+    .timeweb-agent-chat button,
+    .timeweb-agent-chat [data-tw-toggle],
+    .timeweb-agent-chat .tw-floating-toggle {
+      display: none !important; /* скрываем плавающую кнопку */
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>🤖 Timeweb AI Agent</h1>
-    <p>Эта страница используется как вкладка в Microsoft Teams и содержит встроенный чат‑виджет агента Timeweb.</p>
+  <!-- Корневой контейнер, чтобы виджет был над всей страницей -->
+  <div id="tw-root"></div>
 
-    <div id="status">
-      Инициализация виджета... Ожидаем загрузку <code>embed.js</code>.
-    </div>
-
-    <p style="margin-top:16px;font-size:13px;color:#605e5c;">
-      Если всё настроено верно, внизу справа появится плавающее окно чата (кнопка с иконкой), так же как на тестовой странице.
-    </p>
-  </div>
-
-  <!-- ВАШ embed-скрипт агента (без обёрток) -->
-  <script async src="https://timeweb.cloud/api/v1/cloud-ai/agents/58ca2bd7-4157-4445-ab50-6b92360563eb/embed.js?collapsed=true"></script>
+  <!-- Чистый embed-скрипт вашего агента -->
+  <script async src="https://timeweb.cloud/api/v1/cloud-ai/agents/58ca2bd7-4157-4445-ab50-6b92360563eb/embed.js?collapsed=false"></script>
 
   <script>
-    // Простой статус-монитор
-    window.addEventListener('load', function () {
-      setTimeout(function () {
-        const s = document.getElementById('status');
-        // Признаки, что виджет жив: глобальные объекты / DOM-элементы
-        const widgetEl = document.querySelector('[data-agent-id], .timeweb-agent-chat');
-        if (widgetEl || window.AgentChatWidget || window.AgentWidget) {
-          s.textContent = '✅ Виджет загружен. Плавающая кнопка чата должна быть внизу справа.';
-          s.style.background = '#d4edda';
-          s.style.color = '#155724';
-        } else {
-          s.innerHTML = '⚠️ embed.js загрузился, но чата не видно. ' +
-            'Проверьте вкладку Домены в Timeweb и наличие ошибок в консоли браузера.';
-          s.style.background = '#fff3cd';
-          s.style.color = '#856404';
+    // Мини-проверка, что скрипт загрузился
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        if (!document.querySelector('.timeweb-agent-chat')) {
+          console.warn('Timeweb widget not found — проверьте домены в панели Timeweb.');
         }
       }, 3000);
     });
