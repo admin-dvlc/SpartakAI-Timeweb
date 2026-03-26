@@ -49,6 +49,13 @@
       pointer-events: none;
     }
 
+    #user-name-label {
+      max-width: 120px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     /* Корневая сетка */
     #app-root {
       position: fixed;
@@ -225,6 +232,20 @@
       background: #22c55e;
     }
 
+    .clear-history-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-soft);
+      font-size: 11px;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+    }
+
+    .clear-history-btn:hover {
+      color: var(--text-muted);
+    }
+
     /* Центральная область */
     .main-panel {
       position: relative;
@@ -279,7 +300,6 @@
       color: var(--text-muted);
     }
 
-    /* Область сообщений */
     .chat-messages {
       flex: 1 1 auto;
       padding: 20px 60px 12px 40px;
@@ -319,7 +339,6 @@
       font-size: 12px;
     }
 
-    /* Нижняя панель ввода */
     .input-wrapper {
       flex: 0 0 auto;
       padding: 0 80px 28px 80px;
@@ -417,7 +436,7 @@
 
     @keyframes blink {
       0%, 80%, 100% { opacity: 0.3; transform: translateY(0); }
-      40 { opacity: 1; transform: translateY(-1px); }
+      40% { opacity: 1; transform: translateY(-1px); }
     }
 
     .error {
@@ -501,10 +520,13 @@
       <div class="chat-list" id="chat-list"></div>
 
       <div class="sidebar-footer">
-        <div>SpartakAI · beta</div>
+        <div>
+          SpartakAI · beta<br />
+          <button class="clear-history-btn" id="btn-clear-history">Очистить историю</button>
+        </div>
         <div class="sidebar-footer-right">
           <div class="user-dot"></div>
-          <span>Константин</span>
+          <span id="user-name-label">Пользователь</span>
         </div>
       </div>
     </aside>
@@ -512,7 +534,6 @@
     <!-- Центральная часть -->
     <main class="main-panel">
       <div class="main-inner">
-        <!-- Приветственный экран -->
         <div class="hero-wrapper" id="hero-screen">
           <div class="hero">
             <div class="hero-orb"></div>
@@ -523,10 +544,8 @@
           </div>
         </div>
 
-        <!-- История сообщений -->
         <div id="chat-messages" class="chat-messages"></div>
 
-        <!-- Нижняя панель ввода -->
         <div class="input-wrapper">
           <div class="input-bar">
             <input
@@ -537,7 +556,7 @@
             <div class="input-attach">📎</div>
             <button class="input-send-btn" id="btn-send">➤</button>
           </div>
-          <div class="input-hint">Enter — отправить, Shift+Enter — перенос строки (позже можно заменить на textarea)</div>
+          <div class="input-hint">Enter — отправить, Shift+Enter — перенос строки</div>
         </div>
       </div>
     </main>
@@ -545,14 +564,66 @@
 
   <script>
     const EXPECTED_TENANT_ID = "eddab487-208e-4c81-b05f-b92089363722";
+    const STORAGE_KEY = "spartakai_chats_v1";
 
-    // Хранилище чатов в памяти
     let chats = [];
     let activeChatId = null;
 
     function setStatus(text) {
       const el = document.getElementById("status");
       if (el) el.textContent = text || "";
+    }
+
+    function setUserNameLabel(name) {
+      const el = document.getElementById("user-name-label");
+      if (!el) return;
+      el.textContent = name || "Пользователь";
+    }
+
+    function saveChatsToStorage() {
+      try {
+        const payload = { activeChatId, chats };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      } catch (e) {
+        console.warn("Failed to save chats", e);
+      }
+    }
+
+    function loadChatsFromStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return false;
+
+        const parsed = JSON.parse(raw);
+        if (!parsed || !Array.isArray(parsed.chats)) return false;
+
+        chats = parsed.chats.map(c => ({
+          id: c.id,
+          title: c.title || "Диалог",
+          createdAt: c.createdAt ? new Date(c.createdAt) : new Date(),
+          messages: Array.isArray(c.messages) ? c.messages : []
+        }));
+
+        activeChatId = parsed.activeChatId || (chats[0] && chats[0].id) || null;
+        return chats.length > 0;
+      } catch (e) {
+        console.warn("Failed to load chats", e);
+        return false;
+      }
+    }
+
+    function clearHistory() {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch (e) {
+        console.warn("Failed to clear storage", e);
+      }
+      chats = [];
+      activeChatId = null;
+      createNewChat(true);
+      renderChatList();
+      renderActiveChat();
+      saveChatsToStorage();
     }
 
     function createNewChat(initialSystemMsg = true) {
@@ -574,6 +645,7 @@
       activeChatId = id;
       renderChatList();
       renderActiveChat();
+      saveChatsToStorage();
       return chat;
     }
 
@@ -636,6 +708,7 @@
           activeChatId = chat.id;
           renderChatList();
           renderActiveChat();
+          saveChatsToStorage();
         });
 
         listEl.appendChild(li);
@@ -698,6 +771,7 @@
 
       appendMessageBubble(role, content);
       renderChatList();
+      saveChatsToStorage();
     }
 
     function showTyping() {
@@ -731,6 +805,7 @@
       if (!chat) throw new Error("No active chat");
 
       chat.messages.push({ role: "user", content: userText });
+      saveChatsToStorage();
 
       const body = { messages: chat.messages };
 
@@ -758,6 +833,7 @@
 
       const answer = choice.message.content;
       chat.messages.push({ role: "assistant", content: answer });
+      saveChatsToStorage();
       return answer;
     }
 
@@ -769,7 +845,7 @@
       const text = (input.value || "").trim();
       if (!text) return;
 
-      const chat = getActiveChat() || createNewChat(true);
+      getActiveChat() || createNewChat(true);
 
       showHero(false);
       addChatMessage("user", text);
@@ -808,6 +884,12 @@
       renderActiveChat();
     });
 
+    document.getElementById("btn-clear-history").addEventListener("click", () => {
+      if (confirm("Очистить всю историю диалогов на этом устройстве?")) {
+        clearHistory();
+      }
+    });
+
     function showTeamsOnlyError() {
       document.body.innerHTML = `
         <div class="error">
@@ -825,6 +907,17 @@
       }
 
       await microsoftTeams.app.initialize();
+
+      // Получаем контекст и подставляем имя пользователя, если доступно
+      try {
+        const ctx = await microsoftTeams.app.getContext();
+        const displayName = ctx.user && ctx.user.displayName;
+        if (displayName) {
+          setUserNameLabel(displayName);
+        }
+      } catch (e) {
+        console.warn("Failed to get Teams context", e);
+      }
 
       microsoftTeams.authentication.authenticate({
         url: "https://salmon-tree-07b523a03.2.azurestaticapps.net/auth-start.html",
@@ -845,8 +938,10 @@
     const currentOrigin = window.location.origin || "";
     setStatus("Origin: " + currentOrigin);
 
-    // Инициализация стартового чата
-    createNewChat(true);
+    // Инициализация истории
+    if (!loadChatsFromStorage()) {
+      createNewChat(true);
+    }
     renderChatList();
     renderActiveChat();
 
@@ -854,6 +949,7 @@
       initTeamsAuthPopup();
     } else {
       setStatus("Origin: " + currentOrigin + "\nSWA режим, чат через Timeweb API");
+      setUserNameLabel("Пользователь");
     }
   </script>
 </body>
