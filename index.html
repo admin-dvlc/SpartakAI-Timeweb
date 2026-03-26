@@ -560,19 +560,6 @@
 
   <script>
     const EXPECTED_TENANT_ID = "eddab487-208e-4c81-b05f-b92089363722";
-
-    // Timeweb OpenAI-compatible API config
-    const TIMEWEB_BASE_URL = "https://agent.timeweb.cloud";
-    const TIMEWEB_AGENT_ID = "58ca2bd7-4157-4445-ab50-6b92360563eb";
-    const TIMEWEB_API_KEY =
-  "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCIsImtpZCI6IjFrYnhacFJNQGJSI0tSbE1xS1lqIn0." +
-  "eyJ1c2VyIjoiY285NTk0NiIsInR5cGUiOiJhcGlfa2V5IiwiYXBpX2tleV9pZCI6IjI0YjM0NTI5LTExN2YtNDE0ZC05OTMxLTk1ODAyN2ZkZjNmZSIsImlhdCI6MTc3NDUxMjUzMH0." +
-  "I5Undpga7e0PhRZuogzJwQ9S4duTOpWX-Vbo7bcc0xe8a_HOgPn5Nl0aa6LAkFENJ4Kq4XU0G_4Y6fXiOXGkahLc4PU1PFZ8AC5juCY2HjtaVEqz1eTmE3XSjLYxdSd7SgPj-bHQVvgJ8Ba8DZZno3Vt46XBmtmgyjcIrBa4irqqNPKzv91VErEelPIr3StnifBbx4fEJPl2wZ3ABKlVcYu4PwnMoSS_W6KwD1IOUDexcsL356l5aa9sIbDzSp4zB5LeByhTzdhhsXI7DqW22zx6HhRWixKyZyylz9asph7u4uL5HJzE3j-SxmuxQeXD6Zhu6tc3wuYzUGaczbOrK5UQSVfqAqpBa2gj-5FwfAY51mFwNHhZas6ZrjtA2fNyd6QRJCR1INTeQcro198KUkjXsvHNOHyX4ea-tC5otGHZVTiQUjlfSBPXIaB-uds_l3IQ_8RxFLzlMLQnBvDy1s4skVAypmHiYm-ELrfsK_JhulmxnIlATpfXCZiN2S_h";
-    const TIMEWEB_CHAT_URL = TIMEWEB_BASE_URL +
-      "/api/v1/cloud-ai/agents/" +
-      TIMEWEB_AGENT_ID +
-      "/v1/chat/completions";
-
     const chatMessages = [
       {
         role: "system",
@@ -642,39 +629,36 @@
     }
 
     async function sendToTimeweb(userText) {
-      chatMessages.push({ role: "user", content: userText });
+  chatMessages.push({ role: "user", content: userText });
 
-      const body = {
-        messages: chatMessages,
-        stream: false
-        // model/temperature можно не указывать — агент возьмёт из своих настроек
-      };
+  const body = { messages: chatMessages };
 
-      const resp = await fetch(TIMEWEB_CHAT_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + TIMEWEB_API_KEY,
-          "x-proxy-source": "teams-tab"
-        },
-        body: JSON.stringify(body)
-      });
+  const resp = await fetch("/api/timeweb-chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(body)
+  });
 
-      if (!resp.ok) {
-        const text = await resp.text().catch(() => String(resp.status));
-        throw new Error("Timeweb error " + resp.status + ": " + text);
-      }
+  if (!resp.ok) {
+    const data = await resp.json().catch(() => ({}));
+    throw new Error(
+      (data && data.error ? data.error + ": " : "") +
+      (data && data.message ? data.message : "HTTP " + resp.status)
+    );
+  }
 
-      const data = await resp.json();
-      const choice = data.choices && data.choices[0];
-      if (!choice || !choice.message || !choice.message.content) {
-        throw new Error("Unexpected Timeweb response");
-      }
+  const data = await resp.json();
+  const choice = data.choices && data.choices[0];
+  if (!choice || !choice.message || !choice.message.content) {
+    throw new Error("Unexpected Timeweb response");
+  }
 
-      const answer = choice.message.content;
-      chatMessages.push({ role: "assistant", content: answer });
-      return answer;
-    }
+  const answer = choice.message.content;
+  chatMessages.push({ role: "assistant", content: answer });
+  return answer;
+}
 
     async function handleSend() {
       const input = document.getElementById("input-main");
