@@ -47,6 +47,7 @@
       font-size: 12px;
       white-space: pre-wrap;
       pointer-events: none;
+      display: none; /* скрыто */
     }
 
     #user-name-label {
@@ -82,15 +83,408 @@
       gap: 12px;
     }
 
-    .tw-logo {
-      font-size: 16px;
-      font-weight: 500;
-      letter-spacing: 0.04em;
-      color: #e5e7eb;
+    .agent-select {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(15, 23, 42, 0.96);
+      border-radius: 10px;
+      padding: 8px 10px;
+      border: 1px solid rgba(31, 41, 55, 1);
+      font-size: 13px;
     }
 
-    .tw-logo span {
-      color: #60a5fa;
+    .agent-select-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .agent-pill {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 20%, #22c55e 0, #22c55e 35%, #0ea5e9 65%, #8b5cf6 100%);
+      box-shadow: 0 0 18px rgba(59, 130, 246, 0.6);
+    }
+
+    .agent-name {
+      font-size: 13px;
+    }
+
+    .agent-model {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .chevron {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .new-chat-btn {
+      margin-top: 4px;
+      width: 100%;
+      height: 36px;
+      border-radius: 999px;
+      background: linear-gradient(to right, #4f46e5, #6366f1);
+      border: none;
+      color: white;
+      font-size: 13px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 10px 22px rgba(79, 70, 229, 0.55);
+    }
+
+    .new-chat-btn span.icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .sidebar-chats-title {
+      margin-top: 6px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-soft);
+    }
+
+    .chat-list {
+      flex: 1 1 auto;
+      margin-top: 4px;
+      overflow-y: auto;
+      padding-right: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .chat-list-item {
+      border-radius: 10px;
+      padding: 7px 9px;
+      font-size: 12px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .chat-list-item.active {
+      border-color: rgba(59, 130, 246, 0.85);
+      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3);
+    }
+
+    .chat-list-title {
+      color: #e5e7eb;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chat-list-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .sidebar-footer {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+    }
+
+    .sidebar-footer-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .user-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #22c55e;
+    }
+
+    .clear-history-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-soft);
+      font-size: 11px;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+    }
+
+    .clear-history-btn:hover {
+      color: var(--text-muted);
+    }
+
+    /* Центральная область */
+    .main-panel {
+      position: relative;
+      height: 100%;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      background: radial-gradient(circle at top, #0b1120 0, #020617 40%, #000 100%);
+    }
+
+    .main-inner {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+    }
+
+    .hero-wrapper {
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-bottom: 80px;
+    }
+
+    .hero {
+      text-align: center;
+      max-width: 600px;
+      padding: 0 24px;
+    }
+
+    .hero-orb {
+      width: 96px;
+      height: 96px;
+      border-radius: 999px;
+      margin: 0 auto 24px auto;
+      background: radial-gradient(circle at 30% 20%, #22c55e 0, #22c55e 30%, #0ea5e9 55%, #8b5cf6 100%);
+      box-shadow:
+        0 0 42px rgba(59, 130, 246, 0.75),
+        0 0 90px rgba(236, 72, 153, 0.35);
+    }
+
+    .hero-title {
+      font-size: 26px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .hero-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .chat-messages {
+      flex: 1 1 auto;
+      padding: 20px 60px 12px 40px;
+      overflow-y: auto;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .chat-message {
+      max-width: 70%;
+      border-radius: 14px;
+      padding: 9px 13px;
+      font-size: 14px;
+      line-height: 1.45;
+      display: inline-block;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+
+    .chat-message.user {
+      align-self: flex-end;
+      background: #020617;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+    }
+
+    .chat-message.assistant {
+      align-self: flex-start;
+      background: #020617;
+      border: 1px solid rgba(31, 41, 55, 0.95);
+    }
+
+    .chat-message.system {
+      align-self: center;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .input-wrapper {
+      flex: 0 0 auto;
+      padding: 0 80px 28px 80px;
+    }
+
+    .input-bar {
+      display: flex;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.96);
+      border-radius: 999px;
+      border: 1px solid rgba(31, 41, 55, 1);
+      padding: 6px 10px 6px 16px;
+      gap: 10px;
+    }
+
+    #input-main {
+      flex: 1 1 auto;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--text-main);
+      font-size: 14px;
+      padding: 10px 0;
+    }
+
+    #input-main::placeholder {
+      color: var(--text-muted);
+    }
+
+    .input-attach {
+      flex: 0 0 auto;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      border: 1px solid rgba(55, 65, 81, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 14px;
+      cursor: default;
+    }
+
+    .input-send-btn {
+      flex: 0 0 auto;
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(to right, #4f46e5, #6366f1);
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.6);
+    }
+
+    .input-send-btn[disabled] {
+      opacity: 0.6;
+      box-shadow: none;
+      cursor: default;
+    }
+
+    .input-hint {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+      padding-left: 4px;
+    }
+
+    .typing-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+     Ниже полный `index.html` с убранным логотипом timeweb и полностью скрытым статус‑текстом (Origin и пр.).
+
+```html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>SpartakAI · Timeweb AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --bg: #020617;
+      --bg-dark: #020617;
+      --panel-left: #020617;
+      --panel-main: #020617;
+      --border-soft: rgba(15, 23, 42, 0.9);
+      --border-strong: rgba(15, 23, 42, 1);
+      --accent: #6366f1;
+      --accent-soft: rgba(99, 102, 241, 0.16);
+      --accent-strong: rgba(99, 102, 241, 0.22);
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --text-soft: #6b7280;
+      --danger: #f97373;
+      --chip-bg: rgba(30, 64, 175, 0.22);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      background: radial-gradient(circle at top, #0b1120 0, #020617 35%, #000 100%);
+      color: var(--text-main);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    /* Статус для отладки — скрыт */
+    #status {
+      display: none;
+    }
+
+    #user-name-label {
+      max-width: 120px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Корневая сетка */
+    #app-root {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      grid-template-rows: 1fr;
+      background: transparent;
+    }
+
+    /* Левая колонка */
+    .sidebar {
+      border-right: 1px solid rgba(15, 23, 42, 1);
+      background: radial-gradient(circle at top left, #0b1120 0, #020617 40%, #020617 100%);
+      display: flex;
+      flex-direction: column;
+      padding: 16px 14px 14px 18px;
+      gap: 16px;
+    }
+
+    .sidebar-header {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
     .agent-select {
@@ -495,10 +889,7 @@
     <!-- Левая колонка -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <div class="tw-logo">
-          timeweb<span>›cloud</span>
-        </div>
-
+        <!-- Логотип убран, остаётся только селектор агента -->
         <div class="agent-select">
           <div class="agent-select-left">
             <div class="agent-pill"></div>
@@ -604,7 +995,7 @@
           messages: Array.isArray(c.messages) ? c.messages : []
         }));
 
-        activeChatId = parsed.activeChatId || (chats[0] && chats[0].id) || null;
+        activeChatId = parsed.activeChatId || (chats && chats.id) || null;
         return chats.length > 0;
       } catch (e) {
         console.warn("Failed to load chats", e);
@@ -826,7 +1217,7 @@
       }
 
       const data = await resp.json();
-      const choice = data.choices && data.choices[0];
+      const choice = data.choices && data.choices;
       if (!choice || !choice.message || !choice.message.content) {
         throw new Error("Unexpected Timeweb response");
       }
@@ -908,7 +1299,6 @@
 
       await microsoftTeams.app.initialize();
 
-      // Получаем контекст и подставляем имя пользователя, если доступно
       try {
         const ctx = await microsoftTeams.app.getContext();
         const displayName = ctx.user && ctx.user.displayName;
@@ -923,9 +1313,7 @@
         url: "https://salmon-tree-07b523a03.2.azurestaticapps.net/auth-start.html",
         width: 600,
         height: 535,
-        successCallback: (accessToken) => {
-          setStatus("Teams auth OK");
-        },
+        successCallback: () => {},
         failureCallback: (reason) => {
           document.body.innerHTML =
             "<div class='error'><h2>Auth failed</h2><pre style='white-space:pre-wrap;color:#4ea3ff'>" +
@@ -936,9 +1324,8 @@
     }
 
     const currentOrigin = window.location.origin || "";
-    setStatus("Origin: " + currentOrigin);
+    setStatus("");
 
-    // Инициализация истории
     if (!loadChatsFromStorage()) {
       createNewChat(true);
     }
@@ -948,9 +1335,11 @@
     if (location.pathname.startsWith("/teams")) {
       initTeamsAuthPopup();
     } else {
-      setStatus("Origin: " + currentOrigin + "\nSWA режим, чат через Timeweb API");
       setUserNameLabel("Пользователь");
     }
   </script>
 </body>
 </html>
+```
+
+Хочешь ещё убрать/ослабить “SpartakAI · beta” внизу (например, сделать просто “SpartakAI” или добавить номер версии)?
