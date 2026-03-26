@@ -2,878 +2,54 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>SpartakAI · Timeweb AI</title>
+  <title>Timeweb AI Agent</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
-    :root {
-      --bg: #020617;
-      --bg-dark: #020617;
-      --panel-left: #020617;
-      --panel-main: #020617;
-      --border-soft: rgba(15, 23, 42, 0.9);
-      --border-strong: rgba(15, 23, 42, 1);
-      --accent: #6366f1;
-      --accent-soft: rgba(99, 102, 241, 0.16);
-      --accent-strong: rgba(99, 102, 241, 0.22);
-      --text-main: #e5e7eb;
-      --text-muted: #9ca3af;
-      --text-soft: #6b7280;
-      --danger: #f97373;
-      --chip-bg: rgba(30, 64, 175, 0.22);
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
     html, body {
       margin: 0;
       padding: 0;
       height: 100%;
       width: 100%;
       overflow: hidden;
-      background: radial-gradient(circle at top, #0b1120 0, #020617 35%, #000 100%);
-      color: var(--text-main);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #000;
+    }
+
+    .agent-chat-widget {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 100% !important;
+      max-height: 100% !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+
+    .agent-chat-widget .floating-button-container,
+    .agent-chat-widget .floating-button {
+      display: none !important;
     }
 
     #status {
       position: fixed;
-      top: 8px;
-      left: 12px;
-      z-index: 10000;
-      color: var(--text-muted);
-      font-size: 12px;
-      white-space: pre-wrap;
-      pointer-events: none;
-      display: none; /* скрыто */
-    }
-
-    #user-name-label {
-      max-width: 120px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    /* Корневая сетка */
-    #app-root {
-      position: fixed;
-      inset: 0;
-      display: grid;
-      grid-template-columns: 280px minmax(0, 1fr);
-      grid-template-rows: 1fr;
-      background: transparent;
-    }
-
-    /* Левая колонка */
-    .sidebar {
-      border-right: 1px solid rgba(15, 23, 42, 1);
-      background: radial-gradient(circle at top left, #0b1120 0, #020617 40%, #020617 100%);
-      display: flex;
-      flex-direction: column;
-      padding: 16px 14px 14px 18px;
-      gap: 16px;
-    }
-
-    .sidebar-header {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .agent-select {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: rgba(15, 23, 42, 0.96);
-      border-radius: 10px;
-      padding: 8px 10px;
-      border: 1px solid rgba(31, 41, 55, 1);
-      font-size: 13px;
-    }
-
-    .agent-select-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .agent-pill {
-      width: 22px;
-      height: 22px;
-      border-radius: 999px;
-      background: radial-gradient(circle at 30% 20%, #22c55e 0, #22c55e 35%, #0ea5e9 65%, #8b5cf6 100%);
-      box-shadow: 0 0 18px rgba(59, 130, 246, 0.6);
-    }
-
-    .agent-name {
-      font-size: 13px;
-    }
-
-    .agent-model {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .chevron {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .new-chat-btn {
-      margin-top: 4px;
-      width: 100%;
-      height: 36px;
-      border-radius: 999px;
-      background: linear-gradient(to right, #4f46e5, #6366f1);
-      border: none;
-      color: white;
-      font-size: 13px;
-      font-weight: 500;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      cursor: pointer;
-      box-shadow: 0 10px 22px rgba(79, 70, 229, 0.55);
-    }
-
-    .new-chat-btn span.icon {
-      width: 18px;
-      height: 18px;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.9);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-    }
-
-    .sidebar-chats-title {
-      margin-top: 6px;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--text-soft);
-    }
-
-    .chat-list {
-      flex: 1 1 auto;
-      margin-top: 4px;
-      overflow-y: auto;
-      padding-right: 4px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .chat-list-item {
-      border-radius: 10px;
-      padding: 7px 9px;
-      font-size: 12px;
-      background: rgba(15, 23, 42, 0.95);
-      border: 1px solid rgba(31, 41, 55, 0.9);
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .chat-list-item.active {
-      border-color: rgba(59, 130, 246, 0.85);
-      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3);
-    }
-
-    .chat-list-title {
-      color: #e5e7eb;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .chat-list-meta {
-      font-size: 11px;
-      color: var(--text-muted);
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .sidebar-footer {
-      font-size: 11px;
-      color: var(--text-muted);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 6px;
-    }
-
-    .sidebar-footer-right {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .user-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: #22c55e;
-    }
-
-    .clear-history-btn {
-      border: none;
-      background: transparent;
-      color: var(--text-soft);
-      font-size: 11px;
-      cursor: pointer;
-      padding: 0;
-      text-decoration: underline;
-    }
-
-    .clear-history-btn:hover {
-      color: var(--text-muted);
-    }
-
-    /* Центральная область */
-    .main-panel {
-      position: relative;
-      height: 100%;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      background: radial-gradient(circle at top, #0b1120 0, #020617 40%, #000 100%);
-    }
-
-    .main-inner {
-      flex: 1 1 auto;
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-      justify-content: flex-start;
-    }
-
-    .hero-wrapper {
-      flex: 1 1 auto;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding-bottom: 80px;
-    }
-
-    .hero {
-      text-align: center;
-      max-width: 600px;
-      padding: 0 24px;
-    }
-
-    .hero-orb {
-      width: 96px;
-      height: 96px;
-      border-radius: 999px;
-      margin: 0 auto 24px auto;
-      background: radial-gradient(circle at 30% 20%, #22c55e 0, #22c55e 30%, #0ea5e9 55%, #8b5cf6 100%);
-      box-shadow:
-        0 0 42px rgba(59, 130, 246, 0.75),
-        0 0 90px rgba(236, 72, 153, 0.35);
-    }
-
-    .hero-title {
-      font-size: 26px;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-
-    .hero-subtitle {
-      font-size: 14px;
-      color: var(--text-muted);
-    }
-
-    .chat-messages {
-      flex: 1 1 auto;
-      padding: 20px 60px 12px 40px;
-      overflow-y: auto;
-      display: none;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .chat-message {
-      max-width: 70%;
-      border-radius: 14px;
-      padding: 9px 13px;
-      font-size: 14px;
-      line-height: 1.45;
-      display: inline-block;
-      word-wrap: break-word;
-      white-space: pre-wrap;
-    }
-
-    .chat-message.user {
-      align-self: flex-end;
-      background: #020617;
-      border: 1px solid rgba(148, 163, 184, 0.6);
-    }
-
-    .chat-message.assistant {
-      align-self: flex-start;
-      background: #020617;
-      border: 1px solid rgba(31, 41, 55, 0.95);
-    }
-
-    .chat-message.system {
-      align-self: center;
-      background: transparent;
-      color: var(--text-muted);
-      font-size: 12px;
-    }
-
-    .input-wrapper {
-      flex: 0 0 auto;
-      padding: 0 80px 28px 80px;
-    }
-
-    .input-bar {
-      display: flex;
-      align-items: center;
-      background: rgba(15, 23, 42, 0.96);
-      border-radius: 999px;
-      border: 1px solid rgba(31, 41, 55, 1);
-      padding: 6px 10px 6px 16px;
-      gap: 10px;
-    }
-
-    #input-main {
-      flex: 1 1 auto;
-      border: none;
-      outline: none;
-      background: transparent;
-      color: var(--text-main);
-      font-size: 14px;
-      padding: 10px 0;
-    }
-
-    #input-main::placeholder {
-      color: var(--text-muted);
-    }
-
-    .input-attach {
-      flex: 0 0 auto;
-      width: 32px;
-      height: 32px;
-      border-radius: 999px;
-      border: 1px solid rgba(55, 65, 81, 1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-muted);
-      font-size: 14px;
-      cursor: default;
-    }
-
-    .input-send-btn {
-      flex: 0 0 auto;
-      width: 36px;
-      height: 36px;
-      border-radius: 999px;
-      border: none;
-      background: linear-gradient(to right, #4f46e5, #6366f1);
-      color: white;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 15px;
-      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.6);
-    }
-
-    .input-send-btn[disabled] {
-      opacity: 0.6;
-      box-shadow: none;
-      cursor: default;
-    }
-
-    .input-hint {
-      margin-top: 6px;
-      font-size: 11px;
-      color: var(--text-muted);
-      padding-left: 4px;
-    }
-
-    .typing-indicator {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 8px;
-     Ниже полный `index.html` с убранным логотипом timeweb и полностью скрытым статус‑текстом (Origin и пр.).
-
-```html
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8" />
-  <title>SpartakAI · Timeweb AI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <style>
-    :root {
-      --bg: #020617;
-      --bg-dark: #020617;
-      --panel-left: #020617;
-      --panel-main: #020617;
-      --border-soft: rgba(15, 23, 42, 0.9);
-      --border-strong: rgba(15, 23, 42, 1);
-      --accent: #6366f1;
-      --accent-soft: rgba(99, 102, 241, 0.16);
-      --accent-strong: rgba(99, 102, 241, 0.22);
-      --text-main: #e5e7eb;
-      --text-muted: #9ca3af;
-      --text-soft: #6b7280;
-      --danger: #f97373;
-      --chip-bg: rgba(30, 64, 175, 0.22);
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      width: 100%;
-      overflow: hidden;
-      background: radial-gradient(circle at top, #0b1120 0, #020617 35%, #000 100%);
-      color: var(--text-main);
+      top: 10px;
+      left: 10px;
+      z-index: 9999;
+      color: #fff;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
-    /* Статус для отладки — скрыт */
-    #status {
-      display: none;
-    }
-
-    #user-name-label {
-      max-width: 120px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    /* Корневая сетка */
-    #app-root {
-      position: fixed;
-      inset: 0;
-      display: grid;
-      grid-template-columns: 280px minmax(0, 1fr);
-      grid-template-rows: 1fr;
-      background: transparent;
-    }
-
-    /* Левая колонка */
-    .sidebar {
-      border-right: 1px solid rgba(15, 23, 42, 1);
-      background: radial-gradient(circle at top left, #0b1120 0, #020617 40%, #020617 100%);
-      display: flex;
-      flex-direction: column;
-      padding: 16px 14px 14px 18px;
-      gap: 16px;
-    }
-
-    .sidebar-header {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .agent-select {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: rgba(15, 23, 42, 0.96);
-      border-radius: 10px;
-      padding: 8px 10px;
-      border: 1px solid rgba(31, 41, 55, 1);
       font-size: 13px;
-    }
-
-    .agent-select-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .agent-pill {
-      width: 22px;
-      height: 22px;
-      border-radius: 999px;
-      background: radial-gradient(circle at 30% 20%, #22c55e 0, #22c55e 35%, #0ea5e9 65%, #8b5cf6 100%);
-      box-shadow: 0 0 18px rgba(59, 130, 246, 0.6);
-    }
-
-    .agent-name {
-      font-size: 13px;
-    }
-
-    .agent-model {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .chevron {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .new-chat-btn {
-      margin-top: 4px;
-      width: 100%;
-      height: 36px;
-      border-radius: 999px;
-      background: linear-gradient(to right, #4f46e5, #6366f1);
-      border: none;
-      color: white;
-      font-size: 13px;
-      font-weight: 500;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      cursor: pointer;
-      box-shadow: 0 10px 22px rgba(79, 70, 229, 0.55);
-    }
-
-    .new-chat-btn span.icon {
-      width: 18px;
-      height: 18px;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.9);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-    }
-
-    .sidebar-chats-title {
-      margin-top: 6px;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--text-soft);
-    }
-
-    .chat-list {
-      flex: 1 1 auto;
-      margin-top: 4px;
-      overflow-y: auto;
-      padding-right: 4px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .chat-list-item {
-      border-radius: 10px;
-      padding: 7px 9px;
-      font-size: 12px;
-      background: rgba(15, 23, 42, 0.95);
-      border: 1px solid rgba(31, 41, 55, 0.9);
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .chat-list-item.active {
-      border-color: rgba(59, 130, 246, 0.85);
-      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3);
-    }
-
-    .chat-list-title {
-      color: #e5e7eb;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .chat-list-meta {
-      font-size: 11px;
-      color: var(--text-muted);
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .sidebar-footer {
-      font-size: 11px;
-      color: var(--text-muted);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 6px;
-    }
-
-    .sidebar-footer-right {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .user-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: #22c55e;
-    }
-
-    .clear-history-btn {
-      border: none;
-      background: transparent;
-      color: var(--text-soft);
-      font-size: 11px;
-      cursor: pointer;
-      padding: 0;
-      text-decoration: underline;
-    }
-
-    .clear-history-btn:hover {
-      color: var(--text-muted);
-    }
-
-    /* Центральная область */
-    .main-panel {
-      position: relative;
-      height: 100%;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      background: radial-gradient(circle at top, #0b1120 0, #020617 40%, #000 100%);
-    }
-
-    .main-inner {
-      flex: 1 1 auto;
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-      justify-content: flex-start;
-    }
-
-    .hero-wrapper {
-      flex: 1 1 auto;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding-bottom: 80px;
-    }
-
-    .hero {
-      text-align: center;
-      max-width: 600px;
-      padding: 0 24px;
-    }
-
-    .hero-orb {
-      width: 96px;
-      height: 96px;
-      border-radius: 999px;
-      margin: 0 auto 24px auto;
-      background: radial-gradient(circle at 30% 20%, #22c55e 0, #22c55e 30%, #0ea5e9 55%, #8b5cf6 100%);
-      box-shadow:
-        0 0 42px rgba(59, 130, 246, 0.75),
-        0 0 90px rgba(236, 72, 153, 0.35);
-    }
-
-    .hero-title {
-      font-size: 26px;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-
-    .hero-subtitle {
-      font-size: 14px;
-      color: var(--text-muted);
-    }
-
-    .chat-messages {
-      flex: 1 1 auto;
-      padding: 20px 60px 12px 40px;
-      overflow-y: auto;
-      display: none;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .chat-message {
-      max-width: 70%;
-      border-radius: 14px;
-      padding: 9px 13px;
-      font-size: 14px;
-      line-height: 1.45;
-      display: inline-block;
-      word-wrap: break-word;
       white-space: pre-wrap;
-    }
-
-    .chat-message.user {
-      align-self: flex-end;
-      background: #020617;
-      border: 1px solid rgba(148, 163, 184, 0.6);
-    }
-
-    .chat-message.assistant {
-      align-self: flex-start;
-      background: #020617;
-      border: 1px solid rgba(31, 41, 55, 0.95);
-    }
-
-    .chat-message.system {
-      align-self: center;
-      background: transparent;
-      color: var(--text-muted);
-      font-size: 12px;
-    }
-
-    .input-wrapper {
-      flex: 0 0 auto;
-      padding: 0 80px 28px 80px;
-    }
-
-    .input-bar {
-      display: flex;
-      align-items: center;
-      background: rgba(15, 23, 42, 0.96);
-      border-radius: 999px;
-      border: 1px solid rgba(31, 41, 55, 1);
-      padding: 6px 10px 6px 16px;
-      gap: 10px;
-    }
-
-    #input-main {
-      flex: 1 1 auto;
-      border: none;
-      outline: none;
-      background: transparent;
-      color: var(--text-main);
-      font-size: 14px;
-      padding: 10px 0;
-    }
-
-    #input-main::placeholder {
-      color: var(--text-muted);
-    }
-
-    .input-attach {
-      flex: 0 0 auto;
-      width: 32px;
-      height: 32px;
-      border-radius: 999px;
-      border: 1px solid rgba(55, 65, 81, 1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-muted);
-      font-size: 14px;
-      cursor: default;
-    }
-
-    .input-send-btn {
-      flex: 0 0 auto;
-      width: 36px;
-      height: 36px;
-      border-radius: 999px;
-      border: none;
-      background: linear-gradient(to right, #4f46e5, #6366f1);
-      color: white;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 15px;
-      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.6);
-    }
-
-    .input-send-btn[disabled] {
-      opacity: 0.6;
-      box-shadow: none;
-      cursor: default;
-    }
-
-    .input-hint {
-      margin-top: 6px;
-      font-size: 11px;
-      color: var(--text-muted);
-      padding-left: 4px;
-    }
-
-    .typing-indicator {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: var(--accent-soft);
-      font-size: 11px;
-      color: #c7d2fe;
-    }
-
-    .typing-dot {
-      width: 4px;
-      height: 4px;
-      border-radius: 999px;
-      background: #c7d2fe;
-      opacity: 0.4;
-      animation: blink 1.1s infinite ease-in-out;
-    }
-
-    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-
-    @keyframes blink {
-      0%, 80%, 100% { opacity: 0.3; transform: translateY(0); }
-      40% { opacity: 1; transform: translateY(-1px); }
     }
 
     .error {
-      color: var(--danger);
+      color: #fff;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       padding: 40px;
-      font-size: 14px;
     }
 
     .error a {
       color: #4ea3ff;
-    }
-
-    @media (max-width: 1024px) {
-      #app-root {
-        grid-template-columns: 240px minmax(0, 1fr);
-      }
-      .chat-messages {
-        padding: 16px 20px 10px 20px;
-      }
-      .input-wrapper {
-        padding: 0 20px 20px 20px;
-      }
-    }
-
-    @media (max-width: 768px) {
-      #app-root {
-        grid-template-columns: minmax(0, 1fr);
-      }
-      .sidebar {
-        display: none;
-      }
-      .hero-wrapper {
-        padding-bottom: 70px;
-      }
-      .input-wrapper {
-        padding: 0 14px 18px 14px;
-      }
-      .chat-messages {
-        padding: 12px 14px 8px 14px;
-      }
-      .chat-message {
-        max-width: 90%;
-      }
     }
   </style>
 
@@ -885,401 +61,61 @@
 <body>
   <div id="status"></div>
 
-  <div id="app-root">
-    <!-- Левая колонка -->
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <!-- Логотип убран, остаётся только селектор агента -->
-        <div class="agent-select">
-          <div class="agent-select-left">
-            <div class="agent-pill"></div>
-            <div>
-              <div class="agent-name">Spartak</div>
-              <div class="agent-model">Claude 4.6 Sonnet</div>
-            </div>
-          </div>
-          <div class="chevron">▼</div>
-        </div>
-
-        <button class="new-chat-btn" id="btn-new-chat">
-          <span class="icon">+</span>
-          <span>Новый чат</span>
-        </button>
-      </div>
-
-      <div class="sidebar-chats-title">Последние чаты</div>
-      <div class="chat-list" id="chat-list"></div>
-
-      <div class="sidebar-footer">
-        <div>
-          SpartakAI · beta<br />
-          <button class="clear-history-btn" id="btn-clear-history">Очистить историю</button>
-        </div>
-        <div class="sidebar-footer-right">
-          <div class="user-dot"></div>
-          <span id="user-name-label">Пользователь</span>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Центральная часть -->
-    <main class="main-panel">
-      <div class="main-inner">
-        <div class="hero-wrapper" id="hero-screen">
-          <div class="hero">
-            <div class="hero-orb"></div>
-            <div class="hero-title">Чем могу помочь?</div>
-            <div class="hero-subtitle">
-              Задайте вопрос — SpartakAI подготовит ответ, обобщит данные или поможет с анализом.
-            </div>
-          </div>
-        </div>
-
-        <div id="chat-messages" class="chat-messages"></div>
-
-        <div class="input-wrapper">
-          <div class="input-bar">
-            <input
-              id="input-main"
-              type="text"
-              autocomplete="off"
-              placeholder="Введите сообщение" />
-            <div class="input-attach">📎</div>
-            <button class="input-send-btn" id="btn-send">➤</button>
-          </div>
-          <div class="input-hint">Enter — отправить, Shift+Enter — перенос строки</div>
-        </div>
-      </div>
-    </main>
-  </div>
-
   <script>
     const EXPECTED_TENANT_ID = "eddab487-208e-4c81-b05f-b92089363722";
-    const STORAGE_KEY = "spartakai_chats_v1";
-
-    let chats = [];
-    let activeChatId = null;
 
     function setStatus(text) {
       const el = document.getElementById("status");
       if (el) el.textContent = text || "";
     }
 
-    function setUserNameLabel(name) {
-      const el = document.getElementById("user-name-label");
-      if (!el) return;
-      el.textContent = name || "Пользователь";
-    }
+    function openChatFullscreen() {
+      const widget = document.querySelector(".agent-chat-widget");
+      if (!widget) return false;
 
-    function saveChatsToStorage() {
-      try {
-        const payload = { activeChatId, chats };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-      } catch (e) {
-        console.warn("Failed to save chats", e);
-      }
-    }
-
-    function loadChatsFromStorage() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return false;
-
-        const parsed = JSON.parse(raw);
-        if (!parsed || !Array.isArray(parsed.chats)) return false;
-
-        chats = parsed.chats.map(c => ({
-          id: c.id,
-          title: c.title || "Диалог",
-          createdAt: c.createdAt ? new Date(c.createdAt) : new Date(),
-          messages: Array.isArray(c.messages) ? c.messages : []
-        }));
-
-        activeChatId = parsed.activeChatId || (chats && chats.id) || null;
-        return chats.length > 0;
-      } catch (e) {
-        console.warn("Failed to load chats", e);
-        return false;
-      }
-    }
-
-    function clearHistory() {
-      try {
-        localStorage.removeItem(STORAGE_KEY);
-      } catch (e) {
-        console.warn("Failed to clear storage", e);
-      }
-      chats = [];
-      activeChatId = null;
-      createNewChat(true);
-      renderChatList();
-      renderActiveChat();
-      saveChatsToStorage();
-    }
-
-    function createNewChat(initialSystemMsg = true) {
-      const id = Date.now().toString();
-      const messages = [];
-      if (initialSystemMsg) {
-        messages.push({
-          role: "system",
-          content: "You are SpartakAI, an AI assistant integrated into Microsoft Teams via Timeweb Cloud."
-        });
-      }
-      const chat = {
-        id,
-        title: "Новый диалог",
-        createdAt: new Date(),
-        messages
-      };
-      chats.unshift(chat);
-      activeChatId = id;
-      renderChatList();
-      renderActiveChat();
-      saveChatsToStorage();
-      return chat;
-    }
-
-    function getActiveChat() {
-      return chats.find(c => c.id === activeChatId) || null;
-    }
-
-    function formatTimeShort(d) {
-      return d.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
-    }
-
-    function formatDateShort(d) {
-      const today = new Date();
-      const isToday =
-        d.getFullYear() === today.getFullYear() &&
-        d.getMonth() === today.getMonth() &&
-        d.getDate() === today.getDate();
-      if (isToday) return "Сегодня";
-
-      const diff = (today - d) / 86400000;
-      if (diff < 2) return "Вчера";
-
-      return d.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" });
-    }
-
-    function renderChatList() {
-      const listEl = document.getElementById("chat-list");
-      if (!listEl) return;
-
-      listEl.innerHTML = "";
-
-      if (chats.length === 0) {
-        const empty = document.createElement("div");
-        empty.className = "chat-list-item";
-        empty.innerHTML = "<div class='chat-list-title'>Пока нет диалогов</div>";
-        listEl.appendChild(empty);
-        return;
-      }
-
-      for (const chat of chats) {
-        const li = document.createElement("div");
-        li.className = "chat-list-item" + (chat.id === activeChatId ? " active" : "");
-
-        const title = document.createElement("div");
-        title.className = "chat-list-title";
-
-        const lastUserMsg = [...chat.messages].reverse().find(m => m.role === "user");
-        title.textContent = lastUserMsg ? lastUserMsg.content : chat.title;
-
-        const meta = document.createElement("div");
-        meta.className = "chat-list-meta";
-
-        const dt = chat.createdAt instanceof Date ? chat.createdAt : new Date(chat.createdAt);
-        meta.innerHTML = `<span>${formatDateShort(dt)}</span><span>${formatTimeShort(dt)}</span>`;
-
-        li.appendChild(title);
-        li.appendChild(meta);
-
-        li.addEventListener("click", () => {
-          activeChatId = chat.id;
-          renderChatList();
-          renderActiveChat();
-          saveChatsToStorage();
-        });
-
-        listEl.appendChild(li);
-      }
-    }
-
-    function showHero(show) {
-      const hero = document.getElementById("hero-screen");
-      const list = document.getElementById("chat-messages");
-      if (!hero || !list) return;
-
-      if (show) {
-        hero.style.display = "flex";
-        list.style.display = "none";
-      } else {
-        hero.style.display = "none";
-        list.style.display = "flex";
-      }
-    }
-
-    function appendMessageBubble(role, text) {
-      const list = document.getElementById("chat-messages");
-      if (!list) return;
-
-      const div = document.createElement("div");
-      div.className = "chat-message " + role;
-      div.textContent = text;
-      list.appendChild(div);
-      list.scrollTop = list.scrollHeight;
-    }
-
-    function renderActiveChat() {
-      const list = document.getElementById("chat-messages");
-      if (!list) return;
-
-      const chat = getActiveChat();
-      list.innerHTML = "";
-
-      if (!chat || chat.messages.filter(m => m.role !== "system").length === 0) {
-        showHero(true);
-        return;
-      }
-
-      showHero(false);
-      for (const m of chat.messages) {
-        if (m.role === "system") continue;
-        appendMessageBubble(m.role, m.content);
-      }
-    }
-
-    function addChatMessage(role, content) {
-      const chat = getActiveChat();
-      if (!chat) return;
-
-      chat.messages.push({ role, content });
-
-      if (role === "user" && content.trim()) {
-        chat.title = content.slice(0, 80);
-      }
-
-      appendMessageBubble(role, content);
-      renderChatList();
-      saveChatsToStorage();
-    }
-
-    function showTyping() {
-      const list = document.getElementById("chat-messages");
-      if (!list) return;
-
-      const wrap = document.createElement("div");
-      wrap.className = "chat-message assistant";
-      wrap.id = "typing-indicator-wrapper";
-
-      const typing = document.createElement("div");
-      typing.className = "typing-indicator";
-      typing.innerHTML = `
-        <span>Ассистент печатает</span>
-        <span class="typing-dot"></span>
-        <span class="typing-dot"></span>
-        <span class="typing-dot"></span>
-      `;
-      wrap.appendChild(typing);
-      list.appendChild(wrap);
-      list.scrollTop = list.scrollHeight;
-    }
-
-    function hideTyping() {
-      const el = document.getElementById("typing-indicator-wrapper");
-      if (el && el.parentNode) el.parentNode.removeChild(el);
-    }
-
-    async function sendToTimeweb(userText) {
-      const chat = getActiveChat();
-      if (!chat) throw new Error("No active chat");
-
-      chat.messages.push({ role: "user", content: userText });
-      saveChatsToStorage();
-
-      const body = { messages: chat.messages };
-
-      const resp = await fetch("/api/timeweb-chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(body)
+      widget.classList.remove("is-closed");
+      widget.classList.add("is-open");
+      widget.dataset.widgetState = JSON.stringify({
+        open: true,
+        isFullscreen: true,
+        isMenuOpen: false,
+        isConnected: true,
+        isDragging: false,
+        isResizing: false,
+        hasCustomPosition: true
       });
 
-      if (!resp.ok) {
-        const data = await resp.json().catch(() => ({}));
-        throw new Error(
-          (data && data.error ? data.error + ": " : "") +
-          (data && data.message ? data.message : "HTTP " + resp.status)
-        );
-      }
-
-      const data = await resp.json();
-      const choice = data.choices && data.choices;
-      if (!choice || !choice.message || !choice.message.content) {
-        throw new Error("Unexpected Timeweb response");
-      }
-
-      const answer = choice.message.content;
-      chat.messages.push({ role: "assistant", content: answer });
-      saveChatsToStorage();
-      return answer;
+      return true;
     }
 
-    async function handleSend() {
-      const input = document.getElementById("input-main");
-      const btn = document.getElementById("btn-send");
-      if (!input || !btn) return;
+    function initFullscreenPoll() {
+      let attempts = 0;
+      const maxAttempts = 30;
 
-      const text = (input.value || "").trim();
-      if (!text) return;
-
-      getActiveChat() || createNewChat(true);
-
-      showHero(false);
-      addChatMessage("user", text);
-      input.value = "";
-      btn.disabled = true;
-
-      showTyping();
-
-      try {
-        const answer = await sendToTimeweb(text);
-        hideTyping();
-        addChatMessage("assistant", answer);
-      } catch (err) {
-        hideTyping();
-        addChatMessage(
-          "assistant",
-          "Ошибка при обращении к Timeweb API: " +
-            (err && err.message ? err.message : String(err))
-        );
-      } finally {
-        btn.disabled = false;
-      }
+      const timer = setInterval(() => {
+        attempts++;
+        if (openChatFullscreen() || attempts >= maxAttempts) {
+          clearInterval(timer);
+        }
+      }, 500);
     }
 
-    document.getElementById("btn-send").addEventListener("click", handleSend);
-    document.getElementById("input-main").addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        handleSend();
-      }
-    });
+    function loadTimewebWidget() {
+      if (document.getElementById("timeweb-embed-script")) return;
 
-    document.getElementById("btn-new-chat").addEventListener("click", () => {
-      createNewChat(true);
-      renderChatList();
-      renderActiveChat();
-    });
-
-    document.getElementById("btn-clear-history").addEventListener("click", () => {
-      if (confirm("Очистить всю историю диалогов на этом устройстве?")) {
-        clearHistory();
-      }
-    });
+      const s = document.createElement("script");
+      s.id = "timeweb-embed-script";
+      s.async = true;
+      s.src = "https://timeweb.cloud/api/v1/cloud-ai/agents/58ca2bd7-4157-4445-ab50-6b92360563eb/embed.js?collapsed=true";
+      s.onload = () => {
+        setStatus("");
+        initFullscreenPoll();
+      };
+      s.onerror = () => {
+        setStatus("Ошибка загрузки Timeweb-виджета");
+      };
+      document.body.appendChild(s);
+    }
 
     function showTeamsOnlyError() {
       document.body.innerHTML = `
@@ -1299,21 +135,48 @@
 
       await microsoftTeams.app.initialize();
 
-      try {
-        const ctx = await microsoftTeams.app.getContext();
-        const displayName = ctx.user && ctx.user.displayName;
-        if (displayName) {
-          setUserNameLabel(displayName);
-        }
-      } catch (e) {
-        console.warn("Failed to get Teams context", e);
-      }
-
       microsoftTeams.authentication.authenticate({
         url: "https://salmon-tree-07b523a03.2.azurestaticapps.net/auth-start.html",
         width: 600,
         height: 535,
-        successCallback: () => {},
+        successCallback: (accessToken) => {
+          // На этом шаге считаем, что Teams/Entra уже сделали всё нужное
+          setStatus("Teams auth OK");
+          loadTimewebWidget();
+        },
+//         successCallback: (accessToken) => {
+//          try {
+//            // Если токен не похож на JWT (нет 3 частей), не декодируем, просто пускаем
+//            if (!accessToken || accessToken.split(".").length !== 3) {
+//               setStatus("Teams auth OK (non-JWT token)");
+//               loadTimewebWidget();
+//               return;
+//         }
+
+//         const parts = accessToken.split(".");
+//         const payloadPart = parts[1];
+//         const padded = payloadPart.padEnd(
+//           payloadPart.length + (4 - payloadPart.length % 4) % 4,
+//           "="
+//        );
+//        const payload = JSON.parse(atob(padded));
+
+//        const tid = payload.tid;
+//        const upn = payload.preferred_username || payload.upn;
+
+//        if (tid && tid !== EXPECTED_TENANT_ID) {
+//          document.body.innerHTML =
+//            "<h3 style='color:white;font-family:sans-serif'>Access denied: wrong tenant</h3>";
+//          return;
+//     }
+
+//     setStatus("Teams auth OK: " + (upn || "user"));
+//     loadTimewebWidget();
+//   } catch (e) {
+//     document.body.innerHTML =
+//       "<h3 style='color:white;font-family:sans-serif'>Ошибка обработки токена</h3>";
+//   }
+// },
         failureCallback: (reason) => {
           document.body.innerHTML =
             "<div class='error'><h2>Auth failed</h2><pre style='white-space:pre-wrap;color:#4ea3ff'>" +
@@ -1324,22 +187,14 @@
     }
 
     const currentOrigin = window.location.origin || "";
-    setStatus("");
-
-    if (!loadChatsFromStorage()) {
-      createNewChat(true);
-    }
-    renderChatList();
-    renderActiveChat();
+    setStatus("Origin: " + currentOrigin);
 
     if (location.pathname.startsWith("/teams")) {
       initTeamsAuthPopup();
     } else {
-      setUserNameLabel("Пользователь");
+      setStatus("Origin: " + currentOrigin + "\nAAD auth через SWA, загружаем виджет...");
+      loadTimewebWidget();
     }
   </script>
 </body>
 </html>
-```
-
-Хочешь ещё убрать/ослабить “SpartakAI · beta” внизу (например, сделать просто “SpartakAI” или добавить номер версии)?
