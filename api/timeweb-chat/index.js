@@ -1,4 +1,3 @@
-// api/timeweb-chat/index.js
 module.exports = async function (context, req) {
   const fetch = global.fetch || (await import("node-fetch")).default;
 

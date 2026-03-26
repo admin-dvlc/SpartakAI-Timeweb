@@ -14,5 +14,5 @@
       "name": "res"
     }
   ],
-  "scriptFile": "../timeweb-chat/index.js"
+  "scriptFile": "index.js"
 }
