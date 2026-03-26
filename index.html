@@ -140,38 +140,43 @@
         width: 600,
         height: 535,
         successCallback: (accessToken) => {
-         try {
-           // Если токен не похож на JWT (нет 3 частей), не декодируем, просто пускаем
-           if (!accessToken || accessToken.split(".").length !== 3) {
-              setStatus("Teams auth OK (non-JWT token)");
-              loadTimewebWidget();
-              return;
-        }
+          // На этом шаге считаем, что Teams/Entra уже сделали всё нужное
+          setStatus("Teams auth OK");
+          loadTimewebWidget();
+        },
+//         successCallback: (accessToken) => {
+//          try {
+//            // Если токен не похож на JWT (нет 3 частей), не декодируем, просто пускаем
+//            if (!accessToken || accessToken.split(".").length !== 3) {
+//               setStatus("Teams auth OK (non-JWT token)");
+//               loadTimewebWidget();
+//               return;
+//         }
 
-        const parts = accessToken.split(".");
-        const payloadPart = parts[1];
-        const padded = payloadPart.padEnd(
-          payloadPart.length + (4 - payloadPart.length % 4) % 4,
-          "="
-       );
-       const payload = JSON.parse(atob(padded));
+//         const parts = accessToken.split(".");
+//         const payloadPart = parts[1];
+//         const padded = payloadPart.padEnd(
+//           payloadPart.length + (4 - payloadPart.length % 4) % 4,
+//           "="
+//        );
+//        const payload = JSON.parse(atob(padded));
 
-       const tid = payload.tid;
-       const upn = payload.preferred_username || payload.upn;
+//        const tid = payload.tid;
+//        const upn = payload.preferred_username || payload.upn;
 
-       if (tid && tid !== EXPECTED_TENANT_ID) {
-         document.body.innerHTML =
-           "<h3 style='color:white;font-family:sans-serif'>Access denied: wrong tenant</h3>";
-         return;
-    }
+//        if (tid && tid !== EXPECTED_TENANT_ID) {
+//          document.body.innerHTML =
+//            "<h3 style='color:white;font-family:sans-serif'>Access denied: wrong tenant</h3>";
+//          return;
+//     }
 
-    setStatus("Teams auth OK: " + (upn || "user"));
-    loadTimewebWidget();
-  } catch (e) {
-    document.body.innerHTML =
-      "<h3 style='color:white;font-family:sans-serif'>Ошибка обработки токена</h3>";
-  }
-},
+//     setStatus("Teams auth OK: " + (upn || "user"));
+//     loadTimewebWidget();
+//   } catch (e) {
+//     document.body.innerHTML =
+//       "<h3 style='color:white;font-family:sans-serif'>Ошибка обработки токена</h3>";
+//   }
+// },
         failureCallback: (reason) => {
           document.body.innerHTML =
             "<div class='error'><h2>Auth failed</h2><pre style='white-space:pre-wrap;color:#4ea3ff'>" +
