@@ -49,7 +49,7 @@
       "redirect": "/.auth/login/aad"
     }
   },
-  "functions": {
+  "platform": {
     "apiRuntime": "node:18"
   }
 }
