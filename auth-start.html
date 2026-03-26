@@ -9,27 +9,28 @@
   </script>
 </head>
 <body>
-  <script>
-    // Значения из Entra ID (SpartakAI-Tab-SSO)
-    const tenantId = "eddab487-208e-4c81-b05f-b92089363722"; // Directory (tenant) ID
-    const clientId = "cab28362-757f-4cba-87ea-8243bed6b24b"; // Application (client) ID
-    const redirectUri = "https://salmon-tree-07b523a03.2.azurestaticapps.net/auth-end.html";
-    const scope = "api://" + clientId + "/.default";
+  <script
+  src="https://res.cdn.office.net/teams-js/2.30.0/js/MicrosoftTeams.min.js"
+  crossorigin="anonymous">
+</script>
+<script>
+  const tenantId = "eddab487-208e-4c81-b05f-b92089363722"; // Directory (tenant) ID
+  const clientId = "cab28362-757f-4cba-87ea-8243bed6b24b"; // Application (client) ID
+  const redirectUri = "https://salmon-tree-07b523a03.2.azurestaticapps.net/auth-end.html";
 
-    (async () => {
-      await microsoftTeams.app.initialize();
+  (async () => {
+    await microsoftTeams.app.initialize();
 
-      const authorizeUrl =
-        "https://login.microsoftonline.com/" + tenantId + "/oauth2/v2.0/authorize" +
-        "?client_id=" + encodeURIComponent(clientId) +
-        "&response_type=token" +
-        "&redirect_uri=" + encodeURIComponent(redirectUri) +
-        "&scope=" + encodeURIComponent(scope) +
-        "&response_mode=fragment" +
-        "&prompt=select_account";
+    const authorizeUrl =
+      "https://login.microsoftonline.com/" + tenantId + "/oauth2/authorize" +
+      "?client_id=" + encodeURIComponent(clientId) +
+      "&response_type=token" +
+      "&redirect_uri=" + encodeURIComponent(redirectUri) +
+      "&resource=" + encodeURIComponent(clientId) +
+      "&prompt=select_account";
 
-      window.location.assign(authorizeUrl);
-    })();
-  </script>
+    window.location.assign(authorizeUrl);
+  })();
+</script>
 </body>
 </html>
