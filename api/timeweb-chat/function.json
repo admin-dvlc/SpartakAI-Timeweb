@@ -13,5 +13,6 @@
       "direction": "out",
       "name": "res"
     }
-  ]
+  ],
+  "scriptFile": "../timeweb-chat/index.js"
 }
