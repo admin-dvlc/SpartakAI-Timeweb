@@ -47,11 +47,14 @@
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       padding: 40px;
     }
+
+    .error a {
+      color: #4ea3ff;
+    }
   </style>
 
   <script
     src="https://res.cdn.office.net/teams-js/2.30.0/js/MicrosoftTeams.min.js"
-    integrity="sha384-8I0Bv4bWDPSX5ZYhJcChnvrBNoieX3zASTxmZ9URwnjEVx70hsrN0ZUy/C46u8dw"
     crossorigin="anonymous">
   </script>
 </head>
@@ -105,7 +108,7 @@
       s.async = true;
       s.src = "https://timeweb.cloud/api/v1/cloud-ai/agents/58ca2bd7-4157-4445-ab50-6b92360563eb/embed.js?collapsed=true";
       s.onload = () => {
-        setStatus(prev => "");
+        setStatus("");
         initFullscreenPoll();
       };
       s.onerror = () => {
@@ -119,67 +122,56 @@
         <div class="error">
           <h2>Доступ только из Microsoft Teams</h2>
           <p>Этот путь предназначен для вкладки Teams и не должен открываться напрямую.</p>
-          <p><a href="/" style="color:#4ea3ff">Перейти на главную страницу</a></p>
+          <p><a href="/">Перейти на главную страницу</a></p>
         </div>`;
     }
 
-    async function initTeamsSso() {
+    async function initTeamsAuthPopup() {
       const inIframe = window.self !== window.top;
       if (!window.microsoftTeams || !microsoftTeams.app || !inIframe) {
         showTeamsOnlyError();
         return;
       }
 
-      try {
-        await microsoftTeams.app.initialize();
+      await microsoftTeams.app.initialize();
 
-        microsoftTeams.authentication.getAuthToken({
-          successCallback: (token) => {
-            try {
-              const payload = JSON.parse(atob(token.split(".")[1]));
-              const tid = payload.tid;
-              const upn = payload.preferred_username || payload.upn;
+      microsoftTeams.authentication.authenticate({
+        url: "https://salmon-tree-07b523a03.2.azurestaticapps.net/auth-start.html",
+        width: 600,
+        height: 535,
+        successCallback: (accessToken) => {
+          try {
+            const payload = JSON.parse(atob(accessToken.split(".")[1]));
+            const tid = payload.tid;
+            const upn = payload.preferred_username || payload.upn;
 
-              console.log("Teams SSO user:", upn, "tenant:", tid);
-
-              if (tid !== EXPECTED_TENANT_ID) {
-                document.body.innerHTML =
-                  "<h3 style='color:white;font-family:sans-serif'>Access denied: wrong tenant</h3>";
-                return;
-              }
-
-              setStatus("Teams SSO OK: " + upn + "\nOrigin: " + window.location.origin);
-              loadTimewebWidget();
-            } catch (e) {
+            if (tid !== EXPECTED_TENANT_ID) {
               document.body.innerHTML =
-                "<h3 style='color:white;font-family:sans-serif'>Ошибка обработки SSO токена</h3>";
-            }
-          },
-          failureCallback: (error) => {
-            let details = "";
-            try {
-              details = typeof error === "string" ? error : JSON.stringify(error);
-            } catch {
-              details = String(error);
+                "<h3 style='color:white;font-family:sans-serif'>Access denied: wrong tenant</h3>";
+              return;
             }
 
+            setStatus("Teams auth OK: " + upn);
+            loadTimewebWidget();
+          } catch (e) {
             document.body.innerHTML =
-              "<div class='error'><h2>getAuthToken error</h2><pre style='white-space:pre-wrap;color:#4ea3ff'>" +
-              details +
-              "\nOrigin: " + (window.location.origin || "") +
-              "</pre></div>";
+              "<h3 style='color:white;font-family:sans-serif'>Ошибка обработки токена</h3>";
           }
-        });
-      } catch (e) {
-        showTeamsOnlyError();
-      }
+        },
+        failureCallback: (reason) => {
+          document.body.innerHTML =
+            "<div class='error'><h2>Auth failed</h2><pre style='white-space:pre-wrap;color:#4ea3ff'>" +
+            (reason || "unknown") +
+            "</pre></div>";
+        }
+      });
     }
 
     const currentOrigin = window.location.origin || "";
     setStatus("Origin: " + currentOrigin);
 
     if (location.pathname.startsWith("/teams")) {
-      initTeamsSso();
+      initTeamsAuthPopup();
     } else {
       setStatus("Origin: " + currentOrigin + "\nAAD auth через SWA, загружаем виджет...");
       loadTimewebWidget();

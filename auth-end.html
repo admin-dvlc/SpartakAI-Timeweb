@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>SpartakAI Auth End</title>
+  <script
+    src="https://res.cdn.office.net/teams-js/2.30.0/js/MicrosoftTeams.min.js"
+    crossorigin="anonymous">
+  </script>
+</head>
+<body>
+  <script>
+    function parseHash(hash) {
+      const res = {};
+      hash.replace(/^#/, "").split("&").forEach(p => {
+        if (!p) return;
+        const [k, v] = p.split("=");
+        res[decodeURIComponent(k)] = decodeURIComponent(v || "");
+      });
+      return res;
+    }
+
+    (async () => {
+      await microsoftTeams.app.initialize();
+
+      const params = parseHash(window.location.hash || "");
+      const accessToken = params["access_token"];
+      const error = params["error_description"] || params["error"];
+
+      if (accessToken) {
+        microsoftTeams.authentication.notifySuccess(accessToken);
+      } else {
+        microsoftTeams.authentication.notifyFailure(error || "no_token");
+      }
+    })();
+  </script>
+</body>
+</html>

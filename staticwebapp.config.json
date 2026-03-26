@@ -4,7 +4,9 @@
     "exclude": [
       "/.auth/*",
       "/privacy.html",
-      "/terms.html"
+      "/terms.html",
+      "/auth-start.html",
+      "/auth-end.html"
     ]
   },
   "auth": {
@@ -28,7 +30,11 @@
       "allowedRoles": [ "anonymous", "authenticated" ]
     },
     {
-      "route": "/.auth/*",
+      "route": "/auth-start.html",
+      "allowedRoles": [ "anonymous", "authenticated" ]
+    },
+    {
+      "route": "/auth-end.html",
       "allowedRoles": [ "anonymous", "authenticated" ]
     },
     {
@@ -40,14 +46,12 @@
       "allowedRoles": [ "anonymous", "authenticated" ]
     },
     {
+      "route": "/.auth/*",
+      "allowedRoles": [ "anonymous", "authenticated" ]
+    },
+    {
       "route": "/*",
       "allowedRoles": [ "authenticated" ]
     }
-  ],
-  "responseOverrides": {
-    "401": {
-      "statusCode": 302,
-      "redirect": "/.auth/login/aad"
-    }
-  }
+  ]
 }
