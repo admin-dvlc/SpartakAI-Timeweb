@@ -44,9 +44,9 @@ jobs:
           app_location: "/"
           output_location: ""
           skip_app_build: true
-          # ВРЕМЕННО выключаем API:
-          api_location: ""          # было "api"
-          skip_api_build: true
+          api_location: "api"     # снова включаем
+          skip_api_build: true    # сборку не делаем
+
           github_id_token: ${{ steps.idtoken.outputs.result }}
 
   close_pull_request_job:
