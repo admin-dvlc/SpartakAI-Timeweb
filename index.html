@@ -2,54 +2,465 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Timeweb AI Agent</title>
+  <title>SpartakAI · Timeweb AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
+    :root {
+      --bg: #020617;
+      --bg-dark: #020617;
+      --panel-left: #020617;
+      --panel-main: #020617;
+      --border-soft: rgba(15, 23, 42, 0.9);
+      --border-strong: rgba(15, 23, 42, 1);
+      --accent: #6366f1;
+      --accent-soft: rgba(99, 102, 241, 0.16);
+      --accent-strong: rgba(99, 102, 241, 0.22);
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --text-soft: #6b7280;
+      --danger: #f97373;
+      --chip-bg: rgba(30, 64, 175, 0.22);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     html, body {
       margin: 0;
       padding: 0;
       height: 100%;
       width: 100%;
       overflow: hidden;
-      background: #000;
-    }
-
-    .agent-chat-widget {
-      position: fixed !important;
-      inset: 0 !important;
-      width: 100% !important;
-      height: 100% !important;
-      max-width: 100% !important;
-      max-height: 100% !important;
-      border-radius: 0 !important;
-      box-shadow: none !important;
-    }
-
-    .agent-chat-widget .floating-button-container,
-    .agent-chat-widget .floating-button {
-      display: none !important;
+      background: radial-gradient(circle at top, #0b1120 0, #020617 35%, #000 100%);
+      color: var(--text-main);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
     #status {
       position: fixed;
-      top: 10px;
-      left: 10px;
-      z-index: 9999;
-      color: #fff;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      top: 8px;
+      left: 12px;
+      z-index: 10000;
+      color: var(--text-muted);
+      font-size: 12px;
+      white-space: pre-wrap;
+      pointer-events: none;
+    }
+
+    /* Корневая сетка */
+    #app-root {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      grid-template-rows: 1fr;
+      background: transparent;
+    }
+
+    /* Левая колонка */
+    .sidebar {
+      border-right: 1px solid rgba(15, 23, 42, 1);
+      background: radial-gradient(circle at top left, #0b1120 0, #020617 40%, #020617 100%);
+      display: flex;
+      flex-direction: column;
+      padding: 16px 14px 14px 18px;
+      gap: 16px;
+    }
+
+    .sidebar-header {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .tw-logo {
+      font-size: 16px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      color: #e5e7eb;
+    }
+
+    .tw-logo span {
+      color: #60a5fa;
+    }
+
+    .agent-select {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(15, 23, 42, 0.96);
+      border-radius: 10px;
+      padding: 8px 10px;
+      border: 1px solid rgba(31, 41, 55, 1);
       font-size: 13px;
+    }
+
+    .agent-select-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .agent-pill {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 20%, #22c55e 0, #22c55e 35%, #0ea5e9 65%, #8b5cf6 100%);
+      box-shadow: 0 0 18px rgba(59, 130, 246, 0.6);
+    }
+
+    .agent-name {
+      font-size: 13px;
+    }
+
+    .agent-model {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .chevron {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .new-chat-btn {
+      margin-top: 4px;
+      width: 100%;
+      height: 36px;
+      border-radius: 999px;
+      background: linear-gradient(to right, #4f46e5, #6366f1);
+      border: none;
+      color: white;
+      font-size: 13px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 10px 22px rgba(79, 70, 229, 0.55);
+    }
+
+    .new-chat-btn span.icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .sidebar-chats-title {
+      margin-top: 6px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-soft);
+    }
+
+    .chat-list {
+      flex: 1 1 auto;
+      margin-top: 4px;
+      overflow-y: auto;
+      padding-right: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .chat-list-item {
+      border-radius: 10px;
+      padding: 7px 9px;
+      font-size: 12px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .chat-list-item.active {
+      border-color: rgba(59, 130, 246, 0.85);
+      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3);
+    }
+
+    .chat-list-title {
+      color: #e5e7eb;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chat-list-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .sidebar-footer {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+    }
+
+    .sidebar-footer-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .user-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #22c55e;
+    }
+
+    /* Центральная область */
+    .main-panel {
+      position: relative;
+      height: 100%;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      background: radial-gradient(circle at top, #0b1120 0, #020617 40%, #000 100%);
+    }
+
+    .main-inner {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+    }
+
+    .hero-wrapper {
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-bottom: 80px;
+    }
+
+    .hero {
+      text-align: center;
+      max-width: 600px;
+      padding: 0 24px;
+    }
+
+    .hero-orb {
+      width: 96px;
+      height: 96px;
+      border-radius: 999px;
+      margin: 0 auto 24px auto;
+      background: radial-gradient(circle at 30% 20%, #22c55e 0, #22c55e 30%, #0ea5e9 55%, #8b5cf6 100%);
+      box-shadow:
+        0 0 42px rgba(59, 130, 246, 0.75),
+        0 0 90px rgba(236, 72, 153, 0.35);
+    }
+
+    .hero-title {
+      font-size: 26px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .hero-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* Область сообщений */
+    .chat-messages {
+      flex: 1 1 auto;
+      padding: 20px 60px 12px 40px;
+      overflow-y: auto;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .chat-message {
+      max-width: 70%;
+      border-radius: 14px;
+      padding: 9px 13px;
+      font-size: 14px;
+      line-height: 1.45;
+      display: inline-block;
+      word-wrap: break-word;
       white-space: pre-wrap;
     }
 
+    .chat-message.user {
+      align-self: flex-end;
+      background: #020617;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+    }
+
+    .chat-message.assistant {
+      align-self: flex-start;
+      background: #020617;
+      border: 1px solid rgba(31, 41, 55, 0.95);
+    }
+
+    .chat-message.system {
+      align-self: center;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    /* Нижняя панель ввода */
+    .input-wrapper {
+      flex: 0 0 auto;
+      padding: 0 80px 28px 80px;
+    }
+
+    .input-bar {
+      display: flex;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.96);
+      border-radius: 999px;
+      border: 1px solid rgba(31, 41, 55, 1);
+      padding: 6px 10px 6px 16px;
+      gap: 10px;
+    }
+
+    #input-main {
+      flex: 1 1 auto;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--text-main);
+      font-size: 14px;
+      padding: 10px 0;
+    }
+
+    #input-main::placeholder {
+      color: var(--text-muted);
+    }
+
+    .input-attach {
+      flex: 0 0 auto;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      border: 1px solid rgba(55, 65, 81, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 14px;
+      cursor: default;
+    }
+
+    .input-send-btn {
+      flex: 0 0 auto;
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(to right, #4f46e5, #6366f1);
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.6);
+    }
+
+    .input-send-btn[disabled] {
+      opacity: 0.6;
+      box-shadow: none;
+      cursor: default;
+    }
+
+    .input-hint {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+      padding-left: 4px;
+    }
+
+    .typing-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      font-size: 11px;
+      color: #c7d2fe;
+    }
+
+    .typing-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 999px;
+      background: #c7d2fe;
+      opacity: 0.4;
+      animation: blink 1.1s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes blink {
+      0%, 80%, 100% { opacity: 0.3; transform: translateY(0); }
+      40% { opacity: 1; transform: translateY(-1px); }
+    }
+
     .error {
-      color: #fff;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--danger);
       padding: 40px;
+      font-size: 14px;
     }
 
     .error a {
       color: #4ea3ff;
+    }
+
+    @media (max-width: 1024px) {
+      #app-root {
+        grid-template-columns: 240px minmax(0, 1fr);
+      }
+      .chat-messages {
+        padding: 16px 20px 10px 20px;
+      }
+      .input-wrapper {
+        padding: 0 20px 20px 20px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      #app-root {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .sidebar {
+        display: none;
+      }
+      .hero-wrapper {
+        padding-bottom: 70px;
+      }
+      .input-wrapper {
+        padding: 0 14px 18px 14px;
+      }
+      .chat-messages {
+        padding: 12px 14px 8px 14px;
+      }
+      .chat-message {
+        max-width: 90%;
+      }
     }
   </style>
 
@@ -61,61 +472,255 @@
 <body>
   <div id="status"></div>
 
+  <div id="app-root">
+    <!-- Левая колонка -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="tw-logo">
+          timeweb<span>›cloud</span>
+        </div>
+
+        <div class="agent-select">
+          <div class="agent-select-left">
+            <div class="agent-pill"></div>
+            <div>
+              <div class="agent-name">Spartak</div>
+              <div class="agent-model">Claude 4.6 Sonnet</div>
+            </div>
+          </div>
+          <div class="chevron">▼</div>
+        </div>
+
+        <button class="new-chat-btn" id="btn-new-chat">
+          <span class="icon">+</span>
+          <span>Новый чат</span>
+        </button>
+      </div>
+
+      <div class="sidebar-chats-title">Последние чаты</div>
+      <div class="chat-list" id="chat-list">
+        <div class="chat-list-item active">
+          <div class="chat-list-title">Act as a top-tier investment advisor…</div>
+          <div class="chat-list-meta">
+            <span>Вчера</span>
+            <span>19:23</span>
+          </div>
+        </div>
+        <div class="chat-list-item">
+          <div class="chat-list-title">Подготовить сводку по рынку RU облигаций</div>
+          <div class="chat-list-meta">
+            <span>23.03</span>
+            <span>12:10</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div>SpartakAI · beta</div>
+        <div class="sidebar-footer-right">
+          <div class="user-dot"></div>
+          <span>Константин</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Центральная часть -->
+    <main class="main-panel">
+      <div class="main-inner">
+        <!-- Приветственный экран -->
+        <div class="hero-wrapper" id="hero-screen">
+          <div class="hero">
+            <div class="hero-orb"></div>
+            <div class="hero-title">Чем могу помочь?</div>
+            <div class="hero-subtitle">
+              Задайте вопрос — SpartakAI подготовит ответ, обобщит данные или поможет с анализом.
+            </div>
+          </div>
+        </div>
+
+        <!-- История сообщений -->
+        <div id="chat-messages" class="chat-messages"></div>
+
+        <!-- Нижняя панель ввода -->
+        <div class="input-wrapper">
+          <div class="input-bar">
+            <input
+              id="input-main"
+              type="text"
+              autocomplete="off"
+              placeholder="Введите сообщение" />
+            <div class="input-attach">📎</div>
+            <button class="input-send-btn" id="btn-send">➤</button>
+          </div>
+          <div class="input-hint">Enter — отправить, Shift+Enter — перенос строки (позже можно заменить на textarea)</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
   <script>
     const EXPECTED_TENANT_ID = "eddab487-208e-4c81-b05f-b92089363722";
+
+    // Timeweb OpenAI-compatible API config
+    const TIMEWEB_BASE_URL = "https://agent.timeweb.cloud";
+    const TIMEWEB_AGENT_ID = "58ca2bd7-4157-4445-ab50-6b92360563eb";
+    const TIMEWEB_API_KEY  = "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCIsImtpZCI6IjFrYnhacFJNQGJSI0tSbE1xS1lqIn0.eyJ1c2VyIjoiY285NTk0NiIsInR5cGUiOiJhcGlfa2V5IiwiYXBpX2tleV9pZCI6IjI0YjM0NTI5LTExN2YtNDE0ZC05OTMxLTk1ODAyN2ZkZjNmZSIsImlhdCI6MTc3NDUxMjUzMH0.I5Undpga7e0PhRZuogzJwQ9S4duTOpWX-Vbo7bcc0xe8a_HOgPn5Nl0aa6LAkFENJ4Kq4XU0G_4Y6fXiOXGkahLc4PU1PFZ8AC5juCY2HjtaVEqz1eTmE3XSjLYxdSd7SgPj-bHQVvgJ8Ba8DZZno3Vt46XBmtmgyjcIrBa4irqqNPKzv91VErEelPIr3StnifBbx4fEJPl2wZ3ABKlVcYu4PwnMoSS_W6KwD1IOUDexcsL356l5aa9sIbDzSp4zB5LeByhTzdhhsXI7DqW22zx6HhRWixKyZyylz9asph7u4uL5HJzE3j-SxmuxQeXD6Zhu6tc3wuYzUGaczbOrK5UQSVfqAqpBa2gj-5FwfAY51mFwNHhZas6ZrjtA2fNyd6QRJCR1INTeQcro198KUkjXsvHNOHyX4ea-tC5otGHZVTiQUjlfSBPXIaB-uds_l3IQ_8RxFLzlMLQnBvDy1s4skVAypmHiYm-ELrfsK_JhulmxnIlATpfXCZiN2S_h
+"
+    const TIMEWEB_CHAT_URL = TIMEWEB_BASE_URL +
+      "/api/v1/cloud-ai/agents/" +
+      TIMEWEB_AGENT_ID +
+      "/v1/chat/completions";
+
+    const chatMessages = [
+      {
+        role: "system",
+        content: "You are SpartakAI, an AI assistant integrated into Microsoft Teams via Timeweb Cloud."
+      }
+    ];
 
     function setStatus(text) {
       const el = document.getElementById("status");
       if (el) el.textContent = text || "";
     }
 
-    function openChatFullscreen() {
-      const widget = document.querySelector(".agent-chat-widget");
-      if (!widget) return false;
+    function showHero(show) {
+      const hero = document.getElementById("hero-screen");
+      const list = document.getElementById("chat-messages");
+      if (!hero || !list) return;
 
-      widget.classList.remove("is-closed");
-      widget.classList.add("is-open");
-      widget.dataset.widgetState = JSON.stringify({
-        open: true,
-        isFullscreen: true,
-        isMenuOpen: false,
-        isConnected: true,
-        isDragging: false,
-        isResizing: false,
-        hasCustomPosition: true
+      if (show) {
+        hero.style.display = "flex";
+        list.style.display = "none";
+      } else {
+        hero.style.display = "none";
+        list.style.display = "flex";
+      }
+    }
+
+    function appendMessageBubble(role, text) {
+      const list = document.getElementById("chat-messages");
+      if (!list) return;
+
+      const div = document.createElement("div");
+      div.className = "chat-message " + role;
+      div.textContent = text;
+      list.appendChild(div);
+      list.scrollTop = list.scrollHeight;
+    }
+
+    function addChatMessage(role, content) {
+      chatMessages.push({ role, content });
+      appendMessageBubble(role, content);
+    }
+
+    function showTyping() {
+      const list = document.getElementById("chat-messages");
+      if (!list) return;
+
+      const wrap = document.createElement("div");
+      wrap.className = "chat-message assistant";
+      wrap.id = "typing-indicator-wrapper";
+
+      const typing = document.createElement("div");
+      typing.className = "typing-indicator";
+      typing.innerHTML = `
+        <span>Ассистент печатает</span>
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+      `;
+      wrap.appendChild(typing);
+      list.appendChild(wrap);
+      list.scrollTop = list.scrollHeight;
+    }
+
+    function hideTyping() {
+      const el = document.getElementById("typing-indicator-wrapper");
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+    }
+
+    async function sendToTimeweb(userText) {
+      chatMessages.push({ role: "user", content: userText });
+
+      const body = {
+        messages: chatMessages,
+        stream: false
+        // model/temperature можно не указывать — агент возьмёт из своих настроек
+      };
+
+      const resp = await fetch(TIMEWEB_CHAT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + TIMEWEB_API_KEY,
+          "x-proxy-source": "teams-tab"
+        },
+        body: JSON.stringify(body)
       });
 
-      return true;
+      if (!resp.ok) {
+        const text = await resp.text().catch(() => String(resp.status));
+        throw new Error("Timeweb error " + resp.status + ": " + text);
+      }
+
+      const data = await resp.json();
+      const choice = data.choices && data.choices[0];
+      if (!choice || !choice.message || !choice.message.content) {
+        throw new Error("Unexpected Timeweb response");
+      }
+
+      const answer = choice.message.content;
+      chatMessages.push({ role: "assistant", content: answer });
+      return answer;
     }
 
-    function initFullscreenPoll() {
-      let attempts = 0;
-      const maxAttempts = 30;
+    async function handleSend() {
+      const input = document.getElementById("input-main");
+      const btn = document.getElementById("btn-send");
+      if (!input || !btn) return;
 
-      const timer = setInterval(() => {
-        attempts++;
-        if (openChatFullscreen() || attempts >= maxAttempts) {
-          clearInterval(timer);
-        }
-      }, 500);
+      const text = (input.value || "").trim();
+      if (!text) return;
+
+      showHero(false);
+      addChatMessage("user", text);
+      input.value = "";
+      btn.disabled = true;
+
+      showTyping();
+
+      try {
+        const answer = await sendToTimeweb(text);
+        hideTyping();
+        addChatMessage("assistant", answer);
+      } catch (err) {
+        hideTyping();
+        addChatMessage("assistant", "Ошибка при обращении к Timeweb API: " + (err && err.message ? err.message : String(err)));
+      } finally {
+        btn.disabled = false;
+      }
     }
 
-    function loadTimewebWidget() {
-      if (document.getElementById("timeweb-embed-script")) return;
+    document.getElementById("btn-send").addEventListener("click", handleSend);
+    document.getElementById("input-main").addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
+    });
 
-      const s = document.createElement("script");
-      s.id = "timeweb-embed-script";
-      s.async = true;
-      s.src = "https://timeweb.cloud/api/v1/cloud-ai/agents/58ca2bd7-4157-4445-ab50-6b92360563eb/embed.js?collapsed=true";
-      s.onload = () => {
-        setStatus("");
-        initFullscreenPoll();
-      };
-      s.onerror = () => {
-        setStatus("Ошибка загрузки Timeweb-виджета");
-      };
-      document.body.appendChild(s);
-    }
+    document.getElementById("btn-new-chat").addEventListener("click", () => {
+      const list = document.getElementById("chat-messages");
+      if (list) {
+        list.innerHTML = "";
+      }
+      chatMessages.length = 0;
+      chatMessages.push({
+        role: "system",
+        content: "You are SpartakAI, an AI assistant integrated into Microsoft Teams via Timeweb Cloud."
+      });
+      showHero(true);
+    });
 
     function showTeamsOnlyError() {
       document.body.innerHTML = `
@@ -140,43 +745,8 @@
         width: 600,
         height: 535,
         successCallback: (accessToken) => {
-          // На этом шаге считаем, что Teams/Entra уже сделали всё нужное
           setStatus("Teams auth OK");
-          loadTimewebWidget();
         },
-//         successCallback: (accessToken) => {
-//          try {
-//            // Если токен не похож на JWT (нет 3 частей), не декодируем, просто пускаем
-//            if (!accessToken || accessToken.split(".").length !== 3) {
-//               setStatus("Teams auth OK (non-JWT token)");
-//               loadTimewebWidget();
-//               return;
-//         }
-
-//         const parts = accessToken.split(".");
-//         const payloadPart = parts[1];
-//         const padded = payloadPart.padEnd(
-//           payloadPart.length + (4 - payloadPart.length % 4) % 4,
-//           "="
-//        );
-//        const payload = JSON.parse(atob(padded));
-
-//        const tid = payload.tid;
-//        const upn = payload.preferred_username || payload.upn;
-
-//        if (tid && tid !== EXPECTED_TENANT_ID) {
-//          document.body.innerHTML =
-//            "<h3 style='color:white;font-family:sans-serif'>Access denied: wrong tenant</h3>";
-//          return;
-//     }
-
-//     setStatus("Teams auth OK: " + (upn || "user"));
-//     loadTimewebWidget();
-//   } catch (e) {
-//     document.body.innerHTML =
-//       "<h3 style='color:white;font-family:sans-serif'>Ошибка обработки токена</h3>";
-//   }
-// },
         failureCallback: (reason) => {
           document.body.innerHTML =
             "<div class='error'><h2>Auth failed</h2><pre style='white-space:pre-wrap;color:#4ea3ff'>" +
@@ -192,8 +762,7 @@
     if (location.pathname.startsWith("/teams")) {
       initTeamsAuthPopup();
     } else {
-      setStatus("Origin: " + currentOrigin + "\nAAD auth через SWA, загружаем виджет...");
-      loadTimewebWidget();
+      setStatus("Origin: " + currentOrigin + "\nSWA режим, чат через Timeweb API");
     }
   </script>
 </body>
